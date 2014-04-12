@@ -1,0 +1,50 @@
+{
+  "name": "wormhole-js-gh-pages",
+ "description": "The best project ever..",
+  "version": "0.1.0",
+  "homepage": "https://github.com/caseyhoward/wormhole-js-gh-pages",
+  "author": {
+    "name": "Casey Howard",
+    "url": "http://github.com/caseyhoward/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/caseyhoward/wormhole-js-gh-pages.git"
+  },
+  "bugs": {
+    "url": "https://github.com/caseyhoward/wormhole-js-gh-pages/issues"
+  },
+  "engines": {
+    "node": ">=0.8"
+  },
+  "scripts": {
+    "test": "grunt assemble"
+  },
+  "devDependencies": {
+    "assemble": "~0.4.37",
+    "grunt": "~0.4.4",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-connect": "~0.7.1",
+    "grunt-contrib-watch": "~0.6.1",
+    "load-grunt-tasks": "~0.4.0",
+    "time-grunt": "~0.3.1",
+    "assemble-contrib-anchors": "*",
+    "assemble-contrib-permalinks": "*",
+    "assemble-contrib-sitemap": "*",
+    "assemble-contrib-toc": "*"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/caseyhoward/wormhole-js-gh-pages/blob/master/LICENSE-MIT"
+    }
+  ],
+  "keywords": [
+    "assemble",
+    "templates",
+    "handlebars",
+    "site generator",
+    "site builder",
+    "grunt"
+  ]
+}
