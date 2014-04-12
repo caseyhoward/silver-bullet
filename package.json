@@ -31,8 +31,7 @@
     "assemble-contrib-anchors": "*",
     "assemble-contrib-permalinks": "*",
     "assemble-contrib-sitemap": "*",
-    "assemble-contrib-toc": "*",
-    "grunt-shell": "~0.6.4"
+    "assemble-contrib-toc": "*"
   },
   "licenses": [
     {
