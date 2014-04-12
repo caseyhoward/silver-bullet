@@ -13,7 +13,7 @@ module.exports = function(grunt) {
     watch: {
       assemble: {
         files: ['<%= config.src %>/{content,data,templates}/{,*/}*.{md,hbs,yml}'],
-        tasks: ['assemble']
+        tasks: ['build']
       },
       livereload: {
         options: {

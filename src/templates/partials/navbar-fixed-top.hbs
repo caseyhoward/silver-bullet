@@ -15,29 +15,21 @@ component: navbar
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <!-- you can exclude pages using \{{#isnt}} helper: \{{#isnt data.title 'Blog'}} -->
-        {{#each pages}}
-        <li{{#if this.isCurrentPage}} class="active"{{/if}}>
-          <a href="{{relative dest this.dest}}">{{ data.title }}</a>
-        </li>
+        {{#each pages }}
+          {{#is data.title "Home" }}
+            <li>
+              <a href ="{{relative dest this.dest}}">{{data.title }}</a>
+            </li >
+          {{/is }}
+        {{/each  }}
+        {{#each pages }}
+          {{#is data.title  "Docs" }}
+            <li>
+              <a href ="{{relative dest this.dest}}">{{data.title }}</a>
+            </li>
+          {{/is}}
         {{/each}}
       </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Github <b class="caret"></b></a>
-          <ul class="dropdown-menu">
-            <li><a href="https://github.com/assemble/assemble">Assemble</a></li>
-            <li><a href="https://github.com/assemble/generator-assemble">Generator Assemble</a></li>
-            <li class="divider"></li>
-            <li class="dropdown-header">Plugins</li>
-            <li><a href="https://github.com/assemble/assemble-contrib-anchors">assemble-contrib-anchors</a></li>
-            <li><a href="https://github.com/assemble/assemble-contrib-permalinks">assemble-contrib-permalinks</a></li>
-            <li><a href="https://github.com/assemble/assemble-contrib-sitemap">assemble-contrib-sitemap</a></li>
-            <li><a href="https://github.com/assemble/assemble-contrib-toc">assemble-contrib-toc</a></li>
-            
-          </ul>
-        </li>
-      </ul>
-    </div><!--/.nav-collapse -->
+    </div>
   </div>
 </div>
