@@ -1,6 +1,6 @@
 {
   "name": "wormhole-js-gh-pages",
- "description": "The best project ever..",
+  "description": "The best project ever..",
   "version": "0.1.0",
   "homepage": "https://github.com/caseyhoward/wormhole-js-gh-pages",
   "author": {
@@ -31,7 +31,8 @@
     "assemble-contrib-anchors": "*",
     "assemble-contrib-permalinks": "*",
     "assemble-contrib-sitemap": "*",
-    "assemble-contrib-toc": "*"
+    "assemble-contrib-toc": "*",
+    "grunt-shell": "~0.6.4"
   },
   "licenses": [
     {

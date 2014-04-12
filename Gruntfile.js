@@ -60,6 +60,15 @@ module.exports = function(grunt) {
       }
     },
 
+    shell: {
+      copy: {
+        options: {
+          stdout: true
+        },
+        command: 'cp -r dist/* ./'
+      }
+    },
+
     clean: ['<%= config.dist %>/**/*.{html,xml}']
 
   });
@@ -67,6 +76,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('assemble');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('server', [
@@ -78,7 +88,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', [
     'clean',
-    'assemble'
+    'assemble',
+    'shell:copy'
   ]);
 
   grunt.registerTask('default', [
