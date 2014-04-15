@@ -50,7 +50,7 @@ module.exports = function(grunt) {
           flatten: true,
           assets: '<%= config.dist %>/assets',
           layout: '<%= config.src %>/templates/layouts/default.hbs',
-          data: '<%= config.src %>/data/*.{json,yml}',
+          data: '<%= config.src %>/data/**/*.{json,yml}',
           partials: '<%= config.src %>/templates/partials/*.hbs',
           plugins: ['assemble-contrib-anchors','assemble-contrib-permalinks','assemble-contrib-sitemap','assemble-contrib-toc'],
         },
@@ -78,8 +78,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', [
     'clean',
-    'assemble',
-    'shell:copy'
+    'assemble'
   ]);
 
   grunt.registerTask('default', [
