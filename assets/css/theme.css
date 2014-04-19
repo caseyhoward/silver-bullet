@@ -12,3 +12,13 @@ body {
 .theme-showcase > p > .btn {
   margin: 5px 0;
 }
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #2d6ca2;
+  background-position: 0 0;
+}
+
+.btn-primary {
+  background-image: none;
+  text-shadow: 0;
+}
