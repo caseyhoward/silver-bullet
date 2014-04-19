@@ -1,0 +1,32 @@
+{
+  "name": "wormhole-js",
+  "version": "0.0.0",
+  "description": "wormhole-js ===========",
+  "main": "dist/wormhole.js",
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "~3.6.1",
+    "es6ify": "~1.1.0",
+    "browserify": "^3.44.0",
+    "gulp-jshint": "^1.5.3",
+    "gulp-concat": "^2.2.0",
+    "gulp-uglify": "^0.2.1",
+    "gulp-rename": "^1.2.0"
+  },
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/caseyhoward/wormhole-js.git"
+  },
+  "keywords": [
+    "postmessage",
+    "promise",
+    "callback"
+  ],
+  "author": "Casey Howard",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "a9bf3f7e2deb9bd7966fd29a00692799827eea34"
+}
