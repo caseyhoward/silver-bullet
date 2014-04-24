@@ -1,10 +1,8 @@
 'use strict';
 
 var gulp = require('gulp');
+var karma = require('gulp-karma');
 var jshint = require('gulp-jshint');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var rename = require('gulp-rename');
 var path = require('path');
 var fs = require('fs');
 var browserify = require('browserify');
@@ -13,7 +11,6 @@ var jsRoot = path.join(__dirname);
 var bundlePath = path.join('dist', 'bundle.js');
 
 es6ify.traceurOverrides = { blockBinding: true };
-
 
 gulp.task('lint', function() {
   return gulp.src('dist/*.js')
@@ -31,4 +28,9 @@ gulp.task('scripts', function () {
   .pipe(fs.createWriteStream(bundlePath));
 });
 
-gulp.task('default', ['scripts', 'lint']);
+gulp.task('spec', ['scripts'], function() {
+  gulp.src(['spec/*_spec.js'])
+    .pipe(karma({configFile: 'karma.conf.js'}));
+});
+
+gulp.task('default', ['scripts', 'lint', 'spec']);
