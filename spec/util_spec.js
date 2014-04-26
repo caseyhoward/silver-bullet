@@ -15,13 +15,8 @@ describe('Util', function() {
   });
 
   it('yields the parsed data', function() {
-    var wasCalled = false;
-    var result = jsonParser.parse('{"test": 123}', function(data) {
-      wasCalled = true;
-      expect(data).to.deep.equal({test: 123});
-      return 'blah';
-    });
+    var callback = sinon.stub().withArgs(sinon.match({test: 123})).returns('blah');
+    var result = jsonParser.parse('{"test": 123}', callback);
     expect(result).to.equal('blah');
-    expect(wasCalled).to.equal(true);
   });
 });
