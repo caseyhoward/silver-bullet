@@ -10,18 +10,18 @@ describe('Util', function() {
     expect(json).to.deep.equal({a: [1, '2']});
   });
 
-  // it('returns null when there is an exception', function() {
-  //   expect(util.parseJSON('{')).toEqual(null);
-  // });
+  it('returns null when there is an exception', function() {
+    expect(jsonParser.parse('{')).to.equal(undefined);
+  });
 
-  // it('yields the parsed data', function() {
-  //   var wasCalled = false;
-  //   var result = util.parseJSON('{"test": 123}', function(data) {
-  //     wasCalled = true;
-  //     expect(data).toEqual({test: 123});
-  //     return 'blah';
-  //   });
-  //   expect(result).toEqual('blah');
-  //   expect(wasCalled).toBe(true);
-  // });
+  it('yields the parsed data', function() {
+    var wasCalled = false;
+    var result = jsonParser.parse('{"test": 123}', function(data) {
+      wasCalled = true;
+      expect(data).to.deep.equal({test: 123});
+      return 'blah';
+    });
+    expect(result).to.equal('blah');
+    expect(wasCalled).to.equal(true);
+  });
 });
