@@ -17,7 +17,7 @@ gulp.task('lint', function() {
 
 gulp.task('scripts', function () {
   browserify()
-  .require(require.resolve('./src/util.js'), { entry: true })
+  .require(require.resolve('./src/json_parser.js'), { entry: true })
   .bundle({debug: true})
   .on('error', function (err) { console.error(err); })
   .pipe(fs.createWriteStream(bundlePath));

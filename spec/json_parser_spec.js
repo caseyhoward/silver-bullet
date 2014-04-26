@@ -2,8 +2,8 @@ var sinon = require('sinon');
 var chai = require('chai');
 var expect = chai.expect;
 
-describe('Util', function() {
-  var jsonParser = require("../src/util.js").jsonParser();
+describe('JsonParser', function() {
+  var jsonParser = require("../src/json_parser.js");
 
   it('returns parsed JSON', function() {
     var json = jsonParser.parse('{"a": [1, "2"]}')
