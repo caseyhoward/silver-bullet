@@ -22,7 +22,9 @@
     "sinon": "^1.9.1",
     "formatio": "^1.0.2",
     "chai": "^1.9.1",
-    "mkdirp": "^0.4.0"
+    "mkdirp": "^0.4.0",
+    "glob": "^3.2.9",
+    "vinyl-source-stream": "^0.1.1"
   },
   "scripts": {
     "test": "gulp test"

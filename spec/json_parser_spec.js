@@ -3,7 +3,7 @@ var chai = require('chai');
 var expect = chai.expect;
 
 describe('JsonParser', function() {
-  var jsonParser = require("../src/json_parser.js");
+  var jsonParser = require('../src/json_parser.js');
 
   it('returns parsed JSON', function() {
     var json = jsonParser.parse('{"a": [1, "2"]}')
