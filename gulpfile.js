@@ -8,6 +8,7 @@ var fs = require('fs');
 var browserify = require('browserify');
 var jsRoot = path.join(__dirname);
 var bundlePath = path.join('dist', 'bundle.js');
+var mkdirp = require('mkdirp');
 
 gulp.task('lint', function() {
   return gulp.src('dist/*.js')
@@ -16,10 +17,10 @@ gulp.task('lint', function() {
 });
 
 gulp.task('scripts', function () {
+  mkdirp('dist', function(error) { console.error(error) });
   browserify()
-  .require(require.resolve('./src/json_parser.js'), { entry: true })
   .bundle({debug: true})
-  .on('error', function (err) { console.error(err); })
+  .on('error', function (error) { console.error(error); })
   .pipe(fs.createWriteStream(bundlePath));
 });
 
