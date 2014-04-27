@@ -11,7 +11,7 @@ var bundlePath = path.join('dist', 'bundle.js');
 var mkdirp = require('mkdirp');
 
 gulp.task('lint', function() {
-  return gulp.src('dist/*.js')
+  return gulp.src('src/*.js')
     .pipe(jshint())
     .pipe(jshint.reporter('default'));
 });
