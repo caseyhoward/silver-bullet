@@ -5,7 +5,8 @@ describe('Wormhole', function() {
   var iframe = sinon.spy();
 
   it('opens an iframe', function() {
-    sinon.mock(iframeOpener).expects('open').withArgs('about:blank').returns(iframe);
+    var expectation = sinon.mock(iframeOpener).expects('open').withArgs('about:blank').returns(iframe);
     wormhole.open('about:blank');
+    expectation.verify();
   });
 });

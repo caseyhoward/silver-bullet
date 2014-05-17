@@ -11,20 +11,9 @@ var bundlePath = path.join('dist', 'bundle.js');
 var mkdirp = require('mkdirp');
 var glob = require('glob');
 var source = require('vinyl-source-stream');
-var sourceFiles = [
-  './src/json_parser.js',
-  './src/iframe_opener.js',
-  './src/message_poster.js',
-  './src/wormhole.js',
-];
 
-var doBrowserify = function(files, outputFile) {
-  return browserify(files)
-    .on('error', console.error)
-    .bundle({debug: true})
-    .pipe(source('bundle.js'))
-    .pipe(gulp.dest('dist'));
-};
+var sourceFiles = glob.sync('./src/*.js');
+var testFiles = glob.sync('spec/*_spec.js');
 
 gulp.task('lint', function() {
   return gulp.src('src/*.js')
@@ -34,11 +23,15 @@ gulp.task('lint', function() {
 
 gulp.task('scripts', function () {
   mkdirp('dist', console.error);
-  doBrowserify(sourceFiles);
+  return browserify(sourceFiles)
+    .on('error', console.error)
+    .bundle({debug: true})
+    .pipe(source('bundle.js'))
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('spec', ['scripts'], function() {
-  gulp.src(glob.sync('spec/*_spec.js'))
+  gulp.src(testFiles)
   .pipe(karma({
     configFile: 'karma.conf.js',
     action: 'run'

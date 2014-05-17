@@ -5,7 +5,7 @@
   "main": "dist/wormhole.js",
   "dependencies": {},
   "devDependencies": {
-    "browserify": "^3.44.0",
+    "browserify": "^4.1.5",
     "chai": "^1.9.1",
     "formatio": "^1.0.2",
     "glob": "^3.2.9",
@@ -15,7 +15,7 @@
     "gulp-karma": "0.0.4",
     "gulp-rename": "^1.2.0",
     "gulp-uglify": "^0.2.1",
-    "karma": "^0.12.10",
+    "karma": "^0.12.16",
     "karma-browserify": "^0.2.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.1.3",
