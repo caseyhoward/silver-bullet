@@ -1,5 +1,3 @@
-var expect = require('chai').expect;
-
 describe('MessagePoster', function() {
   var messagePoster;
 

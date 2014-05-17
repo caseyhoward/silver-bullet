@@ -1,7 +1,3 @@
-var sinon = require('sinon');
-var chai = require('chai');
-var expect = chai.expect;
-
 describe('JsonParser', function() {
   var jsonParser = require('../src/json_parser.js');
 

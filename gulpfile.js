@@ -18,17 +18,12 @@ var sourceFiles = [
   './src/wormhole.js',
 ];
 
-var specFiles = [
-  './spec/json_parser_spec.js',
-  './spec/message_poster_spec.js',
-  './spec/wormhole_spec.js'
-];
-
 var doBrowserify = function(files, outputFile) {
-  browserify(files)
+  return browserify(files)
     .on('error', console.error)
     .bundle({debug: true})
-    .pipe(fs.createWriteStream(outputFile))
+    .pipe(source('bundle.js'))
+    .pipe(gulp.dest('dist'));
 };
 
 gulp.task('lint', function() {
@@ -39,13 +34,15 @@ gulp.task('lint', function() {
 
 gulp.task('scripts', function () {
   mkdirp('dist', console.error);
-  doBrowserify(sourceFiles, './dist/bundle.js');
+  doBrowserify(sourceFiles);
 });
 
 gulp.task('spec', ['scripts'], function() {
-  doBrowserify(sourceFiles.concat(specFiles), './dist/specs.js');
-  gulp.src('./dist/specs.js')
-    .pipe(karma({configFile: 'karma.conf.js', action: 'run'}));
+  gulp.src(glob.sync('spec/*_spec.js'))
+  .pipe(karma({
+    configFile: 'karma.conf.js',
+    action: 'run'
+  })).on('error', function() { this.emit('end'); });
 });
 
 gulp.task('default', ['scripts', 'lint', 'spec']);
