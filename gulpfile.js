@@ -12,8 +12,11 @@ var mkdirp = require('mkdirp');
 var glob = require('glob');
 var source = require('vinyl-source-stream');
 
-var sourceFiles = glob.sync('./src/*.js');
-var testFiles = glob.sync('spec/*_spec.js');
+var sourceFilesGlobString = './src/**/*.js';
+var testFilesGlobString = 'spec/**/*_spec.js';
+
+var sourceFiles = glob.sync(sourceFilesGlobString);
+var testFiles = glob.sync(testFilesGlobString);
 
 gulp.task('lint', function() {
   return gulp.src('src/*.js')
@@ -36,6 +39,10 @@ gulp.task('spec', ['scripts'], function() {
     configFile: 'karma.conf.js',
     action: 'run'
   })).on('error', function() { this.emit('end'); });
+});
+
+gulp.task('watch', function() {
+  gulp.watch([sourceFilesGlobString, testFilesGlobString], ['default']);
 });
 
 gulp.task('default', ['scripts', 'lint', 'spec']);
