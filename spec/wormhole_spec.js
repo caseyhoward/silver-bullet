@@ -1,8 +1,12 @@
+var wormhole = require('../src/wormhole.js');
+var iframeOpener = require('../src/iframe_opener');
+
 describe('Wormhole', function() {
-  var wormhole = require('../src/wormhole.js');
-  var testWormhole = wormhole.open('about:blank');
-  var iframeOpener = require('../src/iframe_opener');
-  var iframe = sinon.spy();
+  var testWormhole, iframe;
+
+  beforeEach(function() {
+    iframe = sinon.spy();
+  });
 
   it('opens an iframe', function() {
     var expectation = sinon.mock(iframeOpener).expects('open').withArgs('about:blank').returns(iframe);
