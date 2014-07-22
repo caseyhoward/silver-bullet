@@ -45,4 +45,20 @@ gulp.task('watch', function() {
   gulp.watch([sourceFilesGlobString, testFilesGlobString], ['default']);
 });
 
+gulp.task('test-server', function() {
+  var server = require('node-static');
+
+  var startServer = function() {
+    var fileServer = new server.Server('./');
+    require('http').createServer(function (request, response) {
+      request.addListener('end', function () {
+        fileServer.serve(request, response);
+      }).resume();
+    }).listen(8080);
+    return fileServer;
+  };
+
+  startServer();
+});
+
 gulp.task('default', ['scripts', 'lint', 'spec']);
