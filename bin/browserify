@@ -1,0 +1,1 @@
+browserify src/wormhole.js --standalone wormhole > dist/wormhole.js
