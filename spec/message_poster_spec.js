@@ -13,7 +13,7 @@ describe('MessagePoster', function() {
 
     beforeEach(function() {
       postMessageEventListener = _.curry(function(done, event) {
-        expect(event.data).to.equal('event data');
+        expect(event.data).to.equal('"event data"');
         done();
       });
     });

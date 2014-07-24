@@ -8,10 +8,14 @@ describe('Wormhole', function() {
     iframe = sinon.spy();
   });
 
+  afterEach(function() {
+    testWormhole.destroy;
+  });
+
   describe('#opening', function() {
     it('opens an iframe', function() {
       var expectation = sinon.mock(iframeOpener).expects('open').withArgs('about:blank').returns(iframe);
-      wormhole.opening('about:blank');
+      testWormhole = wormhole.opening('about:blank');
       expectation.verify();
     });
   });

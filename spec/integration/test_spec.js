@@ -7,9 +7,12 @@ describe('wormhole', function() {
     testWormhole = wormhole.opening('http://localhost:8080/spec/integration/assets/html/test.html');
   });
 
+  afterEach(function() {
+    testWormhole.destroy();
+  });
+
   it('works', function(done) {
     testWormhole.publish('log in').then(function(result) {
-      console.log('here');
       expect(result).to.equal('success');
       done();
     });

@@ -37,13 +37,12 @@ var Wormhole = function(wormholeWindow, origin) {
       if (type === 'publish') {
         _.each(subscribeCallbacks[topic], function(callback) {
           var data = callback(eventData);
-          messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'response', '__data__': data, '__topic__': topic}}), '*');
+          messagePoster.postMessage(wormholeWindow, {'__wormhole__': {'__type__': 'response', '__data__': data, '__topic__': topic}}, '*');
         });
       } else if (type === 'response') {
-        debugger;
         publishResolves[topic](data);
       } else if (type === 'beacon') {
-        messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'ready'}}), '*');
+        messagePoster.postMessage(wormholeWindow, {'__wormhole__': {'__type__': 'ready'}}, '*');
       } else if (type === 'ready') {
         if (!wormholeReady) { // In case we get another response from a different beacon
           wormholeReady = true;
@@ -57,7 +56,7 @@ var Wormhole = function(wormholeWindow, origin) {
 
   var sendBeaconsUntilReady = function() {
     if (!wormholeReady) {
-      messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'beacon'}}), '*');
+      messagePoster.postMessage(wormholeWindow, {'__wormhole__': {'__type__': 'beacon'}}, '*');
       setTimeout(sendBeaconsUntilReady, 100);
     }
   };
@@ -83,7 +82,7 @@ var Wormhole = function(wormholeWindow, origin) {
       data[WORMHOLE_KEY][TOPIC_KEY] = topic;
       data[WORMHOLE_KEY][DATA_KEY] = eventData;
       data[WORMHOLE_KEY][TYPE_KEY] = 'publish';
-      messagePoster.postMessage(wormholeWindow, JSON.stringify(data), '*');
+      messagePoster.postMessage(wormholeWindow, data, '*');
       if (!publishResolves[topic]) {
         return new Promise(function(resolve, reject) {
           publishResolves[topic] = resolve;
