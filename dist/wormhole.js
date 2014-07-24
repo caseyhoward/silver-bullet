@@ -7540,9 +7540,8 @@ var Promise = _dereq_('es6-promise').Promise;
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 var _ = _dereq_('lodash');
-var messagePoster = _dereq_('../src/message_poster.js');
-var WormholeMessageSender = _dereq_('../src/wormhole_message_sender.js');
-
+var WormholeMessageSender = _dereq_('../src/wormhole_message_sender');
+var wormholeMessageParser = _dereq_('../src/wormhole_message_parser');
 
 var WORMHOLE_KEY = '__wormhole__';
 var TOPIC_KEY = '__topic__';
@@ -7567,21 +7566,18 @@ var Wormhole = function(wormholeWindow, origin) {
     // if (event.origin == origin) {
     var eventData = jsonParser.parse(event.data);
     if (eventData) {
-      var wormholeData = eventData[WORMHOLE_KEY];
-      var topic = wormholeData[TOPIC_KEY];
-      var data = wormholeData[DATA_KEY];
-      var type = wormholeData[TYPE_KEY];
-      log('received: ' + type + ', ' + topic);
-      if (type === 'publish') {
-        _.each(subscribeCallbacks[topic], function(callback) {
-          var data = callback(eventData);
-          wormholeMessageSender.respond(topic, data);
+      var wormholeMessage = wormholeMessageParser.parse(eventData);
+      log('received: ' + wormholeMessage.type + ', ' + wormholeMessage.topic);
+      if (wormholeMessage.type === 'publish') {
+        _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
+          var data = callback(wormholeMessage.data);
+          wormholeMessageSender.respond(wormholeMessage.topic, data);
         });
-      } else if (type === 'response') {
-        publishResolves[topic](data);
-      } else if (type === 'beacon') {
+      } else if (wormholeMessage.type === 'response') {
+        publishResolves[wormholeMessage.topic](wormholeMessage.data);
+      } else if (wormholeMessage.type === 'beacon') {
         wormholeMessageSender.sendReady();
-      } else if (type === 'ready') {
+      } else if (wormholeMessage.type === 'ready') {
         if (!wormholeReady) { // In case we get another response from a different beacon
           wormholeReady = true;
           sendPendingMessages();
@@ -7601,7 +7597,7 @@ var Wormhole = function(wormholeWindow, origin) {
 
   var sendPendingMessages = function() {
     _.each(pendingMessages, function(message) {
-      self.publish(message[0], message[1]);
+      self.publish(message.topic, message.data);
     });
   };
 
@@ -7615,16 +7611,13 @@ var Wormhole = function(wormholeWindow, origin) {
   this.publish = function(topic, data) {
     if (wormholeReady) {
       wormholeMessageSender.publish(topic, data);
-      if (!publishResolves[topic]) {
-        return new Promise(function(resolve, reject) {
-          publishResolves[topic] = resolve;
-          // publishResolves[uuid] = resolve;
-        });
-      }
     } else {
-      pendingMessages.push([topic, data]);
+      pendingMessages.push({topic: topic, data: data});
+    }
+    if (!publishResolves[topic]) {
       return new Promise(function(resolve, reject) {
         publishResolves[topic] = resolve;
+        // publishResolves[uuid] = resolve;
       });
     }
   };
@@ -7636,7 +7629,7 @@ var Wormhole = function(wormholeWindow, origin) {
 
 module.exports = Wormhole;
 
-},{"../src/message_poster.js":16,"../src/wormhole_message_sender.js":20,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}],18:[function(_dereq_,module,exports){
+},{"../src/wormhole_message_parser":20,"../src/wormhole_message_sender":21,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}],18:[function(_dereq_,module,exports){
 var Wormhole = _dereq_('./wormhole');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -7677,6 +7670,26 @@ var WormholeMessageBuilder = function() {
 module.exports = new WormholeMessageBuilder();
 
 },{}],20:[function(_dereq_,module,exports){
+var WormholeMessageParser = function() {
+  var WORMHOLE_KEY = '__wormhole__';
+  var TOPIC_KEY = '__topic__';
+  var DATA_KEY = '__data__';
+  var TYPE_KEY = '__type__';
+  var UUID_KEY = '__uuid__';
+
+  this.parse = function(message) {
+    var data = {};
+    var wormholeData = message[WORMHOLE_KEY];
+    data.type = wormholeData[TYPE_KEY];
+    data.topic = wormholeData[TOPIC_KEY];
+    data.data = wormholeData[DATA_KEY];
+    return data;
+  };
+};
+
+module.exports = new WormholeMessageParser();
+
+},{}],21:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var messagePoster = _dereq_('./message_poster');
 
