@@ -27,7 +27,7 @@ gulp.task('lint', function() {
 gulp.task('scripts', function () {
   mkdirp('dist', console.error);
   return browserify({
-      entries: ['./src/wormhole.js'],
+      entries: ['./src/wormhole_creator.js'],
       standalone: 'wormhole'
     })
     .on('error', console.error)

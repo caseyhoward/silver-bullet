@@ -7536,7 +7536,6 @@ var MessagePoster = function() {
 module.exports = MessagePoster;
 
 },{}],17:[function(_dereq_,module,exports){
-var iframeOpener = _dereq_('./iframe_opener');
 var Promise = _dereq_('es6-promise').Promise;
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
@@ -7640,6 +7639,12 @@ var Wormhole = function(wormholeWindow, origin) {
   };
 };
 
+module.exports = Wormhole;
+
+},{"../src/message_poster.js":16,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}],18:[function(_dereq_,module,exports){
+var Wormhole = _dereq_('./wormhole');
+var iframeOpener = _dereq_('./iframe_opener');
+
 var WormholeCreator = function(iframeOpener) {
   this.open = function(origin) {
     return new Wormhole(parent, origin);
@@ -7653,6 +7658,6 @@ var WormholeCreator = function(iframeOpener) {
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"../src/message_poster.js":16,"./iframe_opener":14,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}]},{},[17])
-(17)
+},{"./iframe_opener":14,"./wormhole":17}]},{},[18])
+(18)
 });

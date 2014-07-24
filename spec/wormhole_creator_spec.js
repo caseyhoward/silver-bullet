@@ -1,4 +1,4 @@
-var wormhole = require('../src/wormhole.js');
+var wormhole = require('../src/wormhole_creator.js');
 var iframeOpener = require('../src/iframe_opener');
 
 describe('Wormhole', function() {
@@ -9,7 +9,7 @@ describe('Wormhole', function() {
   });
 
   afterEach(function() {
-    testWormhole.destroy;
+    testWormhole.destroy();
   });
 
   describe('#opening', function() {

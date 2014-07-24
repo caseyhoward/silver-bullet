@@ -1,1 +1,1 @@
-browserify src/wormhole.js --standalone wormhole > dist/wormhole.js
+browserify src/wormhole_creator.js --standalone wormhole > dist/wormhole.js
