@@ -9,6 +9,7 @@
     "chai": "^1.9.1",
     "es5-shim": "^4.0.0",
     "es6-promise": "^1.0.0",
+    "eventlistener": "0.0.1",
     "formatio": "^1.0.2",
     "glob": "^3.2.9",
     "gulp": "~3.6.1",
@@ -33,7 +34,8 @@
     "vinyl-source-stream": "^0.1.1"
   },
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "browserify": "browserify src/wormhole.js --standalone wormhole > dist/wormhole.js"
   },
   "repository": {
     "type": "git",

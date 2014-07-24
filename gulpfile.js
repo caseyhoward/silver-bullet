@@ -15,7 +15,7 @@ var source = require('vinyl-source-stream');
 var sourceFilesGlobString = './src/**/*.js';
 var testFilesGlobString = 'spec/**/*_spec.js';
 
-var sourceFiles = glob.sync(sourceFilesGlobString);
+// var sourceFiles = glob.sync(sourceFilesGlobString);
 var testFiles = glob.sync(testFilesGlobString);
 
 gulp.task('lint', function() {
@@ -26,10 +26,13 @@ gulp.task('lint', function() {
 
 gulp.task('scripts', function () {
   mkdirp('dist', console.error);
-  return browserify(sourceFiles)
+  return browserify({
+      entries: ['./src/wormhole.js'],
+      standalone: 'wormhole'
+    })
     .on('error', console.error)
     .bundle({debug: true})
-    .pipe(source('bundle.js'))
+    .pipe(source('wormhole.js'))
     .pipe(gulp.dest('dist'));
 });
 

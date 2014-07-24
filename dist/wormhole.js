@@ -674,6 +674,31 @@ exports.isFunction = isFunction;
 exports.isArray = isArray;
 exports.now = now;
 },{}],12:[function(_dereq_,module,exports){
+(function(root,factory){
+    if (typeof define === 'function' && define.amd) {
+        define(factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory();
+    } else {
+        root.eventListener = factory();
+  }
+}(this, function () {
+	function wrap(standard, fallback) {
+		return function (el, evtName, listener, useCapture) {
+			if (el[standard]) {
+				el[standard](evtName, listener, useCapture);
+			} else if (el[fallback]) {
+				el[fallback]('on' + evtName, listener);
+			}
+		}
+	}
+
+    return {
+		add: wrap('addEventListener', 'attachEvent'),
+		remove: wrap('removeEventListener', 'detachEvent')
+	};
+}));
+},{}],13:[function(_dereq_,module,exports){
 (function (global){
 /**
  * @license
@@ -7462,7 +7487,7 @@ exports.now = now;
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var IframeOpener = function() {
@@ -7471,32 +7496,154 @@ var IframeOpener = function() {
     iframe.src = url;
     _.merge(iframe, options);
     document.body.appendChild(iframe);
+    return iframe;
   };
 };
 
 module.exports = new IframeOpener();
 
-},{"lodash":12}],14:[function(_dereq_,module,exports){
+},{"lodash":13}],15:[function(_dereq_,module,exports){
+var JsonParser = {
+  parse: function(text, callback) {
+    var tryParse = function(text) {
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+      }
+    };
+    var parsedJson = tryParse(text);
+    if (callback && parsedJson) {
+      return callback(parsedJson);
+    } else {
+      return parsedJson;
+    }
+  }
+};
+
+module.exports = JsonParser;
+
+},{}],16:[function(_dereq_,module,exports){
+var MessagePoster = function() {
+  var log = function(string) {
+    console.log(window.location.href + ': ' + string);
+  };
+  this.postMessage = function(window, message, targetOrigin) {
+    log('posting message ' + message + ' to ' + targetOrigin);
+    window.postMessage(message, targetOrigin);
+  };
+};
+
+module.exports = MessagePoster;
+
+},{}],17:[function(_dereq_,module,exports){
 var iframeOpener = _dereq_('./iframe_opener');
 var Promise = _dereq_('es6-promise').Promise;
+var eventListener = _dereq_('eventlistener');
+var jsonParser = _dereq_('./json_parser.js');
+var _ = _dereq_('lodash');
+var MessagePoster = _dereq_('../src/message_poster.js');
 
-var Wormhole = function(window, origin) {
-  this.subscribe = function(topic, callback) {
+
+var WORMHOLE_KEY = '__wormhole__';
+var TOPIC_KEY = '__topic__';
+var DATA_KEY = '__data__';
+var TYPE_KEY = '__type__';
+var UUID_KEY = '__uuid__';
+
+var Wormhole = function(wormholeWindow, origin) {
+  var subscribeCallbacks = {};
+  var publishResolves = {};
+  var messagePoster = new MessagePoster();
+  var currentWindow = window;
+  var wormholeReady = false;
+  var self = this;
+  pendingMessages = [];
+
+  var log = function(string) {
+    console.log(window.location.href + ': ' + string);
   };
 
-  this.publish = function(topic, data) {
-    return new Promise(function(resolve, reject) {
-      resolve();
+  var handleMessage = function(event) {
+    // if (event.origin == origin) {
+    var eventData = jsonParser.parse(event.data);
+    if (eventData) {
+      var wormholeData = eventData[WORMHOLE_KEY];
+      var topic = wormholeData[TOPIC_KEY];
+      var data = wormholeData[DATA_KEY];
+      var type = wormholeData[TYPE_KEY];
+      log('received: ' + type + ', ' + topic);
+      if (type === 'publish') {
+        _.each(subscribeCallbacks[topic], function(callback) {
+          var data = callback(eventData);
+          messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'response', '__data__': data, '__topic__': topic}}), '*');
+        });
+      } else if (type === 'response') {
+        debugger;
+        publishResolves[topic](data);
+      } else if (type === 'beacon') {
+        messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'ready'}}), '*');
+      } else if (type === 'ready') {
+        if (!wormholeReady) { // In case we get another response from a different beacon
+          wormholeReady = true;
+          sendPendingMessages();
+        }
+      }
+    }
+    // }
+  };
+  eventListener.add(currentWindow, 'message', handleMessage);
+
+  var sendBeaconsUntilReady = function() {
+    if (!wormholeReady) {
+      messagePoster.postMessage(wormholeWindow, JSON.stringify({'__wormhole__': {'__type__': 'beacon'}}), '*');
+      setTimeout(sendBeaconsUntilReady, 100);
+    }
+  };
+
+  var sendPendingMessages = function() {
+    _.each(pendingMessages, function(message) {
+      self.publish(message[0], message[1]);
     });
+  };
+
+  setTimeout(sendBeaconsUntilReady, 100);
+
+  this.subscribe = function(topic, callback) {
+    subscribeCallbacks[topic] = subscribeCallbacks[topic] || [];
+    subscribeCallbacks[topic].push(callback);
+  };
+
+  this.publish = function(topic, eventData) {
+    var data = {};
+    eventData = eventData || {};
+    if (wormholeReady) {
+      data[WORMHOLE_KEY] = {};
+      data[WORMHOLE_KEY][TOPIC_KEY] = topic;
+      data[WORMHOLE_KEY][DATA_KEY] = eventData;
+      data[WORMHOLE_KEY][TYPE_KEY] = 'publish';
+      messagePoster.postMessage(wormholeWindow, JSON.stringify(data), '*');
+      if (!publishResolves[topic]) {
+        return new Promise(function(resolve, reject) {
+          publishResolves[topic] = resolve;
+          // publishResolves[uuid] = resolve;
+        });
+      }
+    } else {
+      pendingMessages.push([topic, eventData]);
+      return new Promise(function(resolve, reject) {
+        publishResolves[topic] = resolve;
+      });
+    }
+  };
+
+  this.destroy = function() {
+    eventListener.remove(window, 'message', handleMessage);
   };
 };
 
 var WormholeCreator = function(iframeOpener) {
-  var window;
-
   this.open = function(origin) {
-    window = parent;
-    return new Wormhole(window, origin);
+    return new Wormhole(parent, origin);
   };
 
   this.opening = function(source) {
@@ -7507,6 +7654,6 @@ var WormholeCreator = function(iframeOpener) {
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"./iframe_opener":13,"es6-promise":2}]},{},[14])
-(14)
+},{"../src/message_poster.js":16,"./iframe_opener":14,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}]},{},[17])
+(17)
 });

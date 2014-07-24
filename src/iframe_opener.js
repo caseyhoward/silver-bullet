@@ -6,6 +6,7 @@ var IframeOpener = function() {
     iframe.src = url;
     _.merge(iframe, options);
     document.body.appendChild(iframe);
+    return iframe;
   };
 };
 

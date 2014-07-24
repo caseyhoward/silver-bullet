@@ -7,9 +7,10 @@ describe('IframeOpener', function() {
   });
 
   it('opens an iframe', function() {
-    iframeOpener.open('about:blank', {id: "test-iframe"});
+    var openedIframe = iframeOpener.open('about:blank', {id: "test-iframe"});
     var iframe = document.getElementById('test-iframe');
     expect(iframe.src).to.equal('about:blank');
+    expect(iframe).to.equal(openedIframe);
   });
 
   it('opens an with all options passed in', function() {

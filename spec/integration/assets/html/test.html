@@ -1,0 +1,39 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <script src="http://localhost:8080/dist/wormhole.js"></script>
+    <script>
+      var testWormhole = wormhole.open('*');
+      // testWormhole.subscribe(function(topic, data) {
+      //   data.blah = 'test';
+      //   testWormhole.publish(topic, data).then(function(response) {
+      //     console.log('response');
+      //   });
+      // });
+
+      testWormhole.subscribe('log in', function() {
+        // logInUser();
+        console.log('subscribe callback');
+        return 'success';
+      });
+
+      // Return an observable with subscribe already called
+      // wormhole.observable().subscribe(function(data) {
+      //   var fileName = save(data);
+      //   return fileName;
+      // });
+
+      // Observe only one event
+      // wormhole.observable('save').subscribe(function(data) {
+      // });
+
+      // wormhole.subscribe('save', function(data) {
+      // });
+
+      // wormhole.listenOnce('resize', function() {
+      //   resize();
+      // });
+    </script>
+  </body>
+</html>
