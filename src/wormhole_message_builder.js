@@ -6,15 +6,14 @@ var WormholeMessageBuilder = function() {
   // var UUID_KEY = '__uuid__';
 
 
-  this.build = function(type, topic, eventData) {
-    var data = {};
-    data[WORMHOLE_KEY] = {};
-    data[WORMHOLE_KEY][TYPE_KEY] = type;
-    data[WORMHOLE_KEY][TOPIC_KEY] = topic;
-    data[WORMHOLE_KEY][DATA_KEY] = eventData;
-    // data[WORMHOLE_KEY][UUID_KEY] = createUUID();
-    console.log(data);
-    return data;
+  this.build = function(data) {
+    var message = {};
+    message[WORMHOLE_KEY] = {};
+    message[WORMHOLE_KEY][TYPE_KEY] = data.type;
+    message[WORMHOLE_KEY][TOPIC_KEY] = data.topic;
+    message[WORMHOLE_KEY][DATA_KEY] = data.data;
+    // message[WORMHOLE_KEY][UUID_KEY] = createUUID();
+    return message;
   };
 };
 

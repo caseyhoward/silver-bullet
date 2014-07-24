@@ -19,28 +19,28 @@ describe('wormholeMessageSender', function() {
 
   describe('#publish', function() {
     it('publishes', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs('publish', 'log in', sinon.match({abc: 123})).returns(message);
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'publish', topic: 'log in', data: {abc: 123}})).returns(message);
       expect(wormholeMessageSender.publish('log in', {abc: 123})).to.equal('some uuid');
     });
   });
 
   describe('#respond', function() {
     it('responds', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs('response', 'log in', sinon.match({abc: 123})).returns(message);
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'response', topic: 'log in', data: {abc: 123}})).returns(message);
       wormholeMessageSender.respond('log in', {abc: 123});
     });
   });
 
   describe('#sendReady', function() {
     it('sends ready', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs('ready').returns(message);
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'ready'})).returns(message);
       wormholeMessageSender.sendReady();
     });
   });
 
   describe('#sendBeacon', function() {
     it('sends beacon', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs('beacon').returns(message);
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'beacon'})).returns(message);
       wormholeMessageSender.sendBeacon();
     });
   });

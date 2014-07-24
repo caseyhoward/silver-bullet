@@ -7655,15 +7655,14 @@ var WormholeMessageBuilder = function() {
   // var UUID_KEY = '__uuid__';
 
 
-  this.build = function(type, topic, eventData) {
-    var data = {};
-    data[WORMHOLE_KEY] = {};
-    data[WORMHOLE_KEY][TYPE_KEY] = type;
-    data[WORMHOLE_KEY][TOPIC_KEY] = topic;
-    data[WORMHOLE_KEY][DATA_KEY] = eventData;
-    // data[WORMHOLE_KEY][UUID_KEY] = createUUID();
-    console.log(data);
-    return data;
+  this.build = function(data) {
+    var message = {};
+    message[WORMHOLE_KEY] = {};
+    message[WORMHOLE_KEY][TYPE_KEY] = data.type;
+    message[WORMHOLE_KEY][TOPIC_KEY] = data.topic;
+    message[WORMHOLE_KEY][DATA_KEY] = data.data;
+    // message[WORMHOLE_KEY][UUID_KEY] = createUUID();
+    return message;
   };
 };
 
@@ -7695,23 +7694,23 @@ var messagePoster = _dereq_('./message_poster');
 
 var WormholeMessageSender = function(wormholeWindow) {
   this.publish = function(topic, data) {
-    var message = wormholeMessageBuilder.build('publish', topic, data);
+    var message = wormholeMessageBuilder.build({type: 'publish', topic: topic, data: data});
     messagePoster.postMessage(wormholeWindow, message, '*');
     return message.uuid;
   };
 
   this.respond = function(topic, data) {
-    var message = wormholeMessageBuilder.build('response', topic, data);
+    var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data});
     messagePoster.postMessage(wormholeWindow, message, '*');
   };
 
   this.sendReady = function() {
-    var message = wormholeMessageBuilder.build('ready');
+    var message = wormholeMessageBuilder.build({type: 'ready'});
     messagePoster.postMessage(wormholeWindow, message, '*');
   };
 
   this.sendBeacon = function() {
-    var message = wormholeMessageBuilder.build('beacon');
+    var message = wormholeMessageBuilder.build({type: 'beacon'});
     messagePoster.postMessage(wormholeWindow, message, '*');
   };
 };

@@ -1,7 +1,7 @@
 var wormholeMessageBuilder = require('../src/wormhole_message_builder');
 
 describe('wormholeMessageBuilder', function() {
-  expect(wormholeMessageBuilder.build('publish', 'cool', {abc: 123})).to.deep.equal(
+  expect(wormholeMessageBuilder.build({type: 'publish', topic: 'cool', data: {abc: 123}})).to.deep.equal(
     {
       '__wormhole__': {
         '__type__': 'publish',
