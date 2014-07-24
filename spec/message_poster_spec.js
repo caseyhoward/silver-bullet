@@ -1,13 +1,7 @@
 var _ = require('lodash');
+var messagePoster = require('../src/message_poster.js');
 
 describe('MessagePoster', function() {
-  var messagePoster;
-
-  beforeEach(function() {
-    MessagePoster = require('../src/message_poster.js');
-    messagePoster = new MessagePoster();
-  });
-
   describe('postMessage', function() {
     var postMessageEventListener, postMessageEventListenerWithDone;
 

@@ -8,4 +8,4 @@ var MessagePoster = function() {
   };
 };
 
-module.exports = MessagePoster;
+module.exports = new MessagePoster();
