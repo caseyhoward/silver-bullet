@@ -31,6 +31,7 @@
     "mocha": "^1.18.2",
     "node-static": "^0.7.4",
     "sinon": "^1.9.1",
+    "uuid-js": "^0.7.4",
     "vinyl-source-stream": "^0.1.1"
   },
   "scripts": {

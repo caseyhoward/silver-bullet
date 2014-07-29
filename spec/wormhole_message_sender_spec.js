@@ -19,15 +19,15 @@ describe('wormholeMessageSender', function() {
 
   describe('#publish', function() {
     it('publishes', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'publish', topic: 'log in', data: {abc: 123}})).returns(message);
-      expect(wormholeMessageSender.publish('log in', {abc: 123})).to.equal('some uuid');
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'publish', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
+      expect(wormholeMessageSender.publish('log in', {abc: 123}, 'some uuid'));
     });
   });
 
   describe('#respond', function() {
     it('responds', function() {
-      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'response', topic: 'log in', data: {abc: 123}})).returns(message);
-      wormholeMessageSender.respond('log in', {abc: 123});
+      sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'response', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
+      wormholeMessageSender.respond('log in', {abc: 123}, 'some uuid');
     });
   });
 

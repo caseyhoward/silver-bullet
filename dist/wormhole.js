@@ -7488,6 +7488,241 @@ exports.now = now;
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],14:[function(_dereq_,module,exports){
+/*
+ * UUID-js: A js library to generate and parse UUIDs, TimeUUIDs and generate
+ * TimeUUID based on dates for range selections.
+ * @see http://www.ietf.org/rfc/rfc4122.txt
+ **/
+
+function UUIDjs() {
+};
+
+UUIDjs.maxFromBits = function(bits) {
+  return Math.pow(2, bits);
+};
+
+UUIDjs.limitUI04 = UUIDjs.maxFromBits(4);
+UUIDjs.limitUI06 = UUIDjs.maxFromBits(6);
+UUIDjs.limitUI08 = UUIDjs.maxFromBits(8);
+UUIDjs.limitUI12 = UUIDjs.maxFromBits(12);
+UUIDjs.limitUI14 = UUIDjs.maxFromBits(14);
+UUIDjs.limitUI16 = UUIDjs.maxFromBits(16);
+UUIDjs.limitUI32 = UUIDjs.maxFromBits(32);
+UUIDjs.limitUI40 = UUIDjs.maxFromBits(40);
+UUIDjs.limitUI48 = UUIDjs.maxFromBits(48);
+
+UUIDjs.randomUI04 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI04);
+};
+UUIDjs.randomUI06 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI06);
+};
+UUIDjs.randomUI08 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI08);
+};
+UUIDjs.randomUI12 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI12);
+};
+UUIDjs.randomUI14 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI14);
+};
+UUIDjs.randomUI16 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI16);
+};
+UUIDjs.randomUI32 = function() {
+  return Math.round(Math.random() * UUIDjs.limitUI32);
+};
+UUIDjs.randomUI40 = function() {
+  return (0 | Math.random() * (1 << 30)) + (0 | Math.random() * (1 << 40 - 30)) * (1 << 30);
+};
+UUIDjs.randomUI48 = function() {
+  return (0 | Math.random() * (1 << 30)) + (0 | Math.random() * (1 << 48 - 30)) * (1 << 30);
+};
+
+UUIDjs.paddedString = function(string, length, z) {
+  string = String(string);
+  z = (!z) ? '0' : z;
+  var i = length - string.length;
+  for (; i > 0; i >>>= 1, z += z) {
+    if (i & 1) {
+      string = z + string;
+    }
+  }
+  return string;
+};
+
+UUIDjs.prototype.fromParts = function(timeLow, timeMid, timeHiAndVersion, clockSeqHiAndReserved, clockSeqLow, node) {
+  this.version = (timeHiAndVersion >> 12) & 0xF;
+  this.hex = UUIDjs.paddedString(timeLow.toString(16), 8)
+             + '-'
+             + UUIDjs.paddedString(timeMid.toString(16), 4)
+             + '-'
+             + UUIDjs.paddedString(timeHiAndVersion.toString(16), 4)
+             + '-'
+             + UUIDjs.paddedString(clockSeqHiAndReserved.toString(16), 2)
+             + UUIDjs.paddedString(clockSeqLow.toString(16), 2)
+             + '-'
+             + UUIDjs.paddedString(node.toString(16), 12);
+  return this;
+};
+
+UUIDjs.prototype.toString = function() {
+  return this.hex;
+};
+UUIDjs.prototype.toURN = function() {
+  return 'urn:uuid:' + this.hex;
+};
+
+UUIDjs.prototype.toBytes = function() {
+  var parts = this.hex.split('-');
+  var ints = [];
+  var intPos = 0;
+  for (var i = 0; i < parts.length; i++) {
+    for (var j = 0; j < parts[i].length; j+=2) {
+      ints[intPos++] = parseInt(parts[i].substr(j, 2), 16);
+    }
+  }
+  return ints;
+};
+
+UUIDjs.prototype.equals = function(uuid) {
+  if (!(uuid instanceof UUID)) {
+    return false;
+  }
+  if (this.hex !== uuid.hex) {
+    return false;
+  }
+  return true;
+};
+
+UUIDjs.getTimeFieldValues = function(time) {
+  var ts = time - Date.UTC(1582, 9, 15);
+  var hm = ((ts / 0x100000000) * 10000) & 0xFFFFFFF;
+  return { low: ((ts & 0xFFFFFFF) * 10000) % 0x100000000,
+            mid: hm & 0xFFFF, hi: hm >>> 16, timestamp: ts };
+};
+
+UUIDjs._create4 = function() {
+  return new UUIDjs().fromParts(
+    UUIDjs.randomUI32(),
+    UUIDjs.randomUI16(),
+    0x4000 | UUIDjs.randomUI12(),
+    0x80   | UUIDjs.randomUI06(),
+    UUIDjs.randomUI08(),
+    UUIDjs.randomUI48()
+  );
+};
+
+UUIDjs._create1 = function() {
+  var now = new Date().getTime();
+  var sequence = UUIDjs.randomUI14();
+  var node = (UUIDjs.randomUI08() | 1) * 0x10000000000 + UUIDjs.randomUI40();
+  var tick = UUIDjs.randomUI04();
+  var timestamp = 0;
+  var timestampRatio = 1/4;
+
+  if (now != timestamp) {
+    if (now < timestamp) {
+      sequence++;
+    }
+    timestamp = now;
+    tick = UUIDjs.randomUI04();
+  } else if (Math.random() < timestampRatio && tick < 9984) {
+    tick += 1 + UUIDjs.randomUI04();
+  } else {
+    sequence++;
+  }
+
+  var tf = UUIDjs.getTimeFieldValues(timestamp);
+  var tl = tf.low + tick;
+  var thav = (tf.hi & 0xFFF) | 0x1000;
+
+  sequence &= 0x3FFF;
+  var cshar = (sequence >>> 8) | 0x80;
+  var csl = sequence & 0xFF;
+
+  return new UUIDjs().fromParts(tl, tf.mid, thav, cshar, csl, node);
+};
+
+UUIDjs.create = function(version) {
+  version = version || 4;
+  return this['_create' + version]();
+};
+
+UUIDjs.fromTime = function(time, last) {
+  last = (!last) ? false : last;
+  var tf = UUIDjs.getTimeFieldValues(time);
+  var tl = tf.low;
+  var thav = (tf.hi & 0xFFF) | 0x1000;  // set version '0001'
+  if (last === false) {
+    return new UUIDjs().fromParts(tl, tf.mid, thav, 0, 0, 0);
+  } else {
+    return new UUIDjs().fromParts(tl, tf.mid, thav, 0x80 | UUIDjs.limitUI06, UUIDjs.limitUI08 - 1, UUIDjs.limitUI48 - 1);
+  }
+};
+
+UUIDjs.firstFromTime = function(time) {
+  return UUIDjs.fromTime(time, false);
+};
+UUIDjs.lastFromTime = function(time) {
+  return UUIDjs.fromTime(time, true);
+};
+
+UUIDjs.fromURN = function(strId) {
+  var r, p = /^(?:urn:uuid:|\{)?([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{2})([0-9a-f]{2})-([0-9a-f]{12})(?:\})?$/i;
+  if ((r = p.exec(strId))) {
+    return new UUIDjs().fromParts(parseInt(r[1], 16), parseInt(r[2], 16),
+                            parseInt(r[3], 16), parseInt(r[4], 16),
+                            parseInt(r[5], 16), parseInt(r[6], 16));
+  }
+  return null;
+};
+
+UUIDjs.fromBytes = function(ints) {
+  if (ints.length < 5) {
+    return null;
+  }
+  var str = '';
+  var pos = 0;
+  var parts = [4, 2, 2, 2, 6];
+  for (var i = 0; i < parts.length; i++) {
+    for (var j = 0; j < parts[i]; j++) {
+      var octet = ints[pos++].toString(16);
+      if (octet.length == 1) {
+        octet = '0' + octet;
+      }
+      str += octet;
+    }
+    if (parts[i] !== 6) {
+      str += '-';
+    }
+  }
+  return UUIDjs.fromURN(str);
+};
+
+UUIDjs.fromBinary = function(binary) {
+  var ints = [];
+  for (var i = 0; i < binary.length; i++) {
+    ints[i] = binary.charCodeAt(i);
+    if (ints[i] > 255 || ints[i] < 0) {
+      throw new Error('Unexpected byte in binary data.');
+    }
+  }
+  return UUIDjs.fromBytes(ints);
+};
+
+// Aliases to support legacy code. Do not use these when writing new code as
+// they may be removed in future versions!
+UUIDjs.new = function() {
+  return this.create(4);
+};
+UUIDjs.newTS = function() {
+  return this.create(1);
+};
+
+module.exports = UUIDjs;
+
+},{}],15:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var IframeOpener = function() {
@@ -7502,7 +7737,7 @@ var IframeOpener = function() {
 
 module.exports = new IframeOpener();
 
-},{"lodash":13}],15:[function(_dereq_,module,exports){
+},{"lodash":13}],16:[function(_dereq_,module,exports){
 var JsonParser = {
   parse: function(text, callback) {
     var tryParse = function(text) {
@@ -7522,32 +7757,34 @@ var JsonParser = {
 
 module.exports = JsonParser;
 
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var MessagePoster = function() {
-  var log = function(string) {
-    console.log(window.location.href + ': ' + string);
-  };
   this.postMessage = function(window, message, targetOrigin) {
-    log('posting message ' + message + ' to ' + targetOrigin);
+    console.log('Posting the following message:');
+    console.log(message);
     window.postMessage(JSON.stringify(message), targetOrigin);
   };
 };
 
 module.exports = new MessagePoster();
 
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
+var UUID = _dereq_('uuid-js');
+
+module.exports = {
+  generate: function() {
+    return UUID.create().toString();
+  }
+};
+
+},{"uuid-js":14}],19:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 var _ = _dereq_('lodash');
-var WormholeMessageSender = _dereq_('../src/wormhole_message_sender');
-var wormholeMessageParser = _dereq_('../src/wormhole_message_parser');
-
-var WORMHOLE_KEY = '__wormhole__';
-var TOPIC_KEY = '__topic__';
-var DATA_KEY = '__data__';
-var TYPE_KEY = '__type__';
-var UUID_KEY = '__uuid__';
+var WormholeMessageSender = _dereq_('./wormhole_message_sender');
+var wormholeMessageParser = _dereq_('./wormhole_message_parser');
+var uuidGenerator = _dereq_('./uuid_generator');
 
 var Wormhole = function(wormholeWindow, origin) {
   var subscribeCallbacks = {};
@@ -7558,30 +7795,34 @@ var Wormhole = function(wormholeWindow, origin) {
   var self = this;
   pendingMessages = [];
 
-  var log = function(string) {
-    console.log(window.location.href + ': ' + string);
-  };
-
   var handleMessage = function(event) {
+    var sendPendingMessages = function() {
+      _.each(pendingMessages, function(message) {
+        wormholeMessageSender.publish(message.topic, message.data, message.uuid);
+      });
+    };
+
     // if (event.origin == origin) {
     var eventData = jsonParser.parse(event.data);
     if (eventData) {
       var wormholeMessage = wormholeMessageParser.parse(eventData);
-      log('received: ' + wormholeMessage.type + ', ' + wormholeMessage.topic);
+      console.log('Received :');
+      console.log(wormholeMessage);
       if (wormholeMessage.type === 'publish') {
+        console.log(subscribeCallbacks[wormholeMessage.topic]);
         _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-          var data = callback(wormholeMessage.data);
-          wormholeMessageSender.respond(wormholeMessage.topic, data);
+          var responseData = callback(wormholeMessage.data);
+          wormholeMessageSender.respond(wormholeMessage.topic, responseData, wormholeMessage.uuid);
         });
+        wormholeReady = true;
+        sendPendingMessages();
       } else if (wormholeMessage.type === 'response') {
-        publishResolves[wormholeMessage.topic](wormholeMessage.data);
+        publishResolves[wormholeMessage.uuid](wormholeMessage.data);
       } else if (wormholeMessage.type === 'beacon') {
         wormholeMessageSender.sendReady();
       } else if (wormholeMessage.type === 'ready') {
-        if (!wormholeReady) { // In case we get another response from a different beacon
-          wormholeReady = true;
-          sendPendingMessages();
-        }
+        wormholeReady = true;
+        sendPendingMessages();
       }
     }
     // }
@@ -7591,14 +7832,8 @@ var Wormhole = function(wormholeWindow, origin) {
   var sendBeaconsUntilReady = function() {
     if (!wormholeReady) {
       wormholeMessageSender.sendBeacon();
-      setTimeout(sendBeaconsUntilReady, 100);
+      setTimeout(sendBeaconsUntilReady, 1000);
     }
-  };
-
-  var sendPendingMessages = function() {
-    _.each(pendingMessages, function(message) {
-      self.publish(message.topic, message.data);
-    });
   };
 
   setTimeout(sendBeaconsUntilReady, 100);
@@ -7609,17 +7844,16 @@ var Wormhole = function(wormholeWindow, origin) {
   };
 
   this.publish = function(topic, data) {
+    // outgoingMessageQueue.push(topic, data);
+    var uuid = uuidGenerator.generate();
     if (wormholeReady) {
-      wormholeMessageSender.publish(topic, data);
+      wormholeMessageSender.publish(topic, data, uuid);
     } else {
-      pendingMessages.push({topic: topic, data: data});
+      pendingMessages.push({topic: topic, data: data, uuid: uuid});
     }
-    if (!publishResolves[topic]) {
-      return new Promise(function(resolve, reject) {
-        publishResolves[topic] = resolve;
-        // publishResolves[uuid] = resolve;
-      });
-    }
+    return new Promise(function(resolve, reject) {
+      publishResolves[uuid] = resolve;
+    });
   };
 
   this.destroy = function() {
@@ -7629,7 +7863,7 @@ var Wormhole = function(wormholeWindow, origin) {
 
 module.exports = Wormhole;
 
-},{"../src/wormhole_message_parser":20,"../src/wormhole_message_sender":21,"./json_parser.js":15,"es6-promise":2,"eventlistener":12,"lodash":13}],18:[function(_dereq_,module,exports){
+},{"./json_parser.js":16,"./uuid_generator":18,"./wormhole_message_parser":22,"./wormhole_message_sender":23,"es6-promise":2,"eventlistener":12,"lodash":13}],20:[function(_dereq_,module,exports){
 var Wormhole = _dereq_('./wormhole');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -7640,19 +7874,21 @@ var WormholeCreator = function(iframeOpener) {
 
   this.opening = function(source) {
     iframe = iframeOpener.open(source);
+    console.log(iframe);
+    // console.log(iframe.contentWindow);
     return new Wormhole(iframe.contentWindow, source);
   };
 };
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"./iframe_opener":14,"./wormhole":17}],19:[function(_dereq_,module,exports){
+},{"./iframe_opener":15,"./wormhole":19}],21:[function(_dereq_,module,exports){
 var WormholeMessageBuilder = function() {
   var WORMHOLE_KEY = '__wormhole__';
   var TOPIC_KEY = '__topic__';
   var DATA_KEY = '__data__';
   var TYPE_KEY = '__type__';
-  // var UUID_KEY = '__uuid__';
+  var UUID_KEY = '__uuid__';
 
 
   this.build = function(data) {
@@ -7661,14 +7897,14 @@ var WormholeMessageBuilder = function() {
     message[WORMHOLE_KEY][TYPE_KEY] = data.type;
     message[WORMHOLE_KEY][TOPIC_KEY] = data.topic;
     message[WORMHOLE_KEY][DATA_KEY] = data.data;
-    // message[WORMHOLE_KEY][UUID_KEY] = createUUID();
+    message[WORMHOLE_KEY][UUID_KEY] = data.uuid;
     return message;
   };
 };
 
 module.exports = new WormholeMessageBuilder();
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 var WormholeMessageParser = function() {
   var WORMHOLE_KEY = '__wormhole__';
   var TOPIC_KEY = '__topic__';
@@ -7682,25 +7918,25 @@ var WormholeMessageParser = function() {
     data.type = wormholeData[TYPE_KEY];
     data.topic = wormholeData[TOPIC_KEY];
     data.data = wormholeData[DATA_KEY];
+    data.uuid = wormholeData[UUID_KEY];
     return data;
   };
 };
 
 module.exports = new WormholeMessageParser();
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var messagePoster = _dereq_('./message_poster');
 
 var WormholeMessageSender = function(wormholeWindow) {
-  this.publish = function(topic, data) {
-    var message = wormholeMessageBuilder.build({type: 'publish', topic: topic, data: data});
+  this.publish = function(topic, data, uuid) {
+    var message = wormholeMessageBuilder.build({type: 'publish', topic: topic, data: data, uuid: uuid});
     messagePoster.postMessage(wormholeWindow, message, '*');
-    return message.uuid;
   };
 
-  this.respond = function(topic, data) {
-    var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data});
+  this.respond = function(topic, data, uuid) {
+    var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data, uuid: uuid});
     messagePoster.postMessage(wormholeWindow, message, '*');
   };
 
@@ -7717,6 +7953,6 @@ var WormholeMessageSender = function(wormholeWindow) {
 
 module.exports = WormholeMessageSender;
 
-},{"./message_poster":16,"./wormhole_message_builder":19}]},{},[18])
-(18)
+},{"./message_poster":17,"./wormhole_message_builder":21}]},{},[20])
+(20)
 });

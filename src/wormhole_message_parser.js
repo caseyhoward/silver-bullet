@@ -11,6 +11,7 @@ var WormholeMessageParser = function() {
     data.type = wormholeData[TYPE_KEY];
     data.topic = wormholeData[TOPIC_KEY];
     data.data = wormholeData[DATA_KEY];
+    data.uuid = wormholeData[UUID_KEY];
     return data;
   };
 };
