@@ -4,15 +4,17 @@
   <body>
     <script src="http://localhost:8080/dist/wormhole.js"></script>
     <script>
-      var testWormhole = wormhole.open('*');
+      setTimeout(function() {
+        var testWormhole = wormhole.open('*');
 
-      testWormhole.subscribe('log in', function(data, respond) {
-        setTimeout(function() { respond('successful log in'); }, 100);
-      });
+        testWormhole.subscribe('log in', function(data, respond) {
+          setTimeout(function() { respond('successful log in'); }, 100);
+        });
 
-      testWormhole.subscribe('log out', function(data, respond) {
-        respond('successful log out');
-      });
+        testWormhole.subscribe('log out', function(data, respond) {
+          respond('successful log out');
+        });
+      }, 200);
     </script>
   </body>
 </html>
