@@ -7811,8 +7811,10 @@ var Wormhole = function(wormholeWindow, origin) {
       if (wormholeMessage.type === 'publish') {
         console.log(subscribeCallbacks[wormholeMessage.topic]);
         _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-          var responseData = callback(wormholeMessage.data);
-          wormholeMessageSender.respond(wormholeMessage.topic, responseData, wormholeMessage.uuid);
+          var respond = function(data) {
+            wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+          }
+          var responseData = callback(wormholeMessage.data, respond);
         });
         wormholeReady = true;
         sendPendingMessages();

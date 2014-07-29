@@ -12,12 +12,13 @@
       //   });
       // });
 
-      testWormhole.subscribe('log in', function() {
-        // logInUser();
-        console.log('subscribe callback');
-        return 'success';
+      testWormhole.subscribe('log in', function(data, respond) {
+        setTimeout(function() { respond('successful log in'); }, 100);
       });
 
+      testWormhole.subscribe('log out', function(data, respond) {
+        respond('successful log out');
+      });
       // Return an observable with subscribe already called
       // wormhole.observable().subscribe(function(data) {
       //   var fileName = save(data);

@@ -1,4 +1,5 @@
 var wormhole = require('../../dist/wormhole');
+var Promise = require('es6-promise').Promise;
 
 describe('wormhole', function() {
   var testWormhole;
@@ -12,8 +13,13 @@ describe('wormhole', function() {
   });
 
   it('works', function(done) {
-    testWormhole.publish('log in').then(function(result) {
-      expect(result).to.equal('success');
+    var logInPromise = testWormhole.publish('log in').then(function(result) {
+      expect(result).to.equal('successful log in');
+    });
+    var logOutPromise = testWormhole.publish('log out').then(function(result) {
+      expect(result).to.equal('successful log out');
+    });
+    Promise.all([logInPromise, logOutPromise]).then(function() {
       done();
     });
   });
