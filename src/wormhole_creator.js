@@ -6,8 +6,14 @@ var WormholeCreator = function(iframeOpener) {
     return new Wormhole(parent, origin);
   };
 
-  this.opening = function(source) {
-    iframe = iframeOpener.open(source);
+  this.opening = function(sourceOrIframe) {
+    if (typeof sourceOrIframe === 'string') {
+      source = sourceOrIframe;
+      iframe = iframeOpener.open(sourceOrIframe);
+    } else {
+      source = sourceOrIframe.src;
+      iframe = sourceOrIframe;
+    }
     return new Wormhole(iframe.contentWindow, source);
   };
 };
