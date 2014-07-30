@@ -1,9 +1,7 @@
 var MessagePoster = function() {
-  var log = function(string) {
-    console.log(window.location.href + ': ' + string);
-  };
   this.postMessage = function(window, message, targetOrigin) {
-    log('posting message ' + message + ' to ' + targetOrigin);
+    console.log('Posting the following message to ' + targetOrigin + ':');
+    console.log(message);
     window.postMessage(JSON.stringify(message), targetOrigin);
   };
 };

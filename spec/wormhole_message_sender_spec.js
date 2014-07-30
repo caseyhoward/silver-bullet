@@ -9,8 +9,8 @@ describe('wormholeMessageSender', function() {
     sandbox = sinon.sandbox.create();
     message = {a: 1, uuid: 'some uuid'};
     wormholeWindow = {};
-    sandbox.mock(messagePoster).expects('postMessage').withArgs(wormholeWindow, message, '*');
-    wormholeMessageSender = new WormholeMessageSender(wormholeWindow);
+    sandbox.mock(messagePoster).expects('postMessage').withArgs(wormholeWindow, message, 'http://origin.host');
+    wormholeMessageSender = new WormholeMessageSender(wormholeWindow, 'http://origin.host');
   });
 
   afterEach(function() {
@@ -20,7 +20,7 @@ describe('wormholeMessageSender', function() {
   describe('#publish', function() {
     it('publishes', function() {
       sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'publish', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
-      expect(wormholeMessageSender.publish('log in', {abc: 123}, 'some uuid'));
+      wormholeMessageSender.publish('log in', {abc: 123}, 'some uuid');
     });
   });
 

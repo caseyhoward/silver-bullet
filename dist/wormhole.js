@@ -699,6 +699,9 @@ exports.now = now;
 	};
 }));
 },{}],13:[function(_dereq_,module,exports){
+/*! lite-url v0.1.1 29-07-2014 https://github.com/sadams/lite-url.git */
+(function(){"use strict";function a(a){var b=c[a];if("undefined"!=typeof b)return b;b={};for(var g=e.exec(a),h=f.length;h--;)b[f[h]]=g[h]||"";b.params={};var i=b.search?b.search.substring(b.search.indexOf("?")+1):"";return i.replace(d,function(a,c,d){c&&(b.params[c]=d)}),c[a]=b,b}var b=this,c={},d=/(?:^|&)([^&=]*)=?([^&]*)/g,e=/^(?:(?:(([^:\/#\?]+:)?(?:(?:\/\/)(?:(?:(?:([^:@\/#\?]+)(?:\:([^:@\/#\?]*))?)@)?(([^:\/#\?\]\[]+|\[[^\/\]@#?]+\])(?:\:([0-9]+))?))?)?)?((?:\/?(?:[^\/\?#]+\/+)*)(?:[^\?#]*)))?(\?[^#]+)?)(#.*)?/,f=["href","origin","protocol","username","password","host","hostname","port","pathname","search","hash"];return"undefined"!=typeof exports?("undefined"!=typeof module&&module.exports&&(exports=module.exports=a),exports.liteURL=a):b.liteURL=a,a}).call(this);
+},{}],14:[function(_dereq_,module,exports){
 (function (global){
 /**
  * @license
@@ -7487,7 +7490,7 @@ exports.now = now;
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 /*
  * UUID-js: A js library to generate and parse UUIDs, TimeUUIDs and generate
  * TimeUUID based on dates for range selections.
@@ -7722,7 +7725,7 @@ UUIDjs.newTS = function() {
 
 module.exports = UUIDjs;
 
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var IframeOpener = function() {
@@ -7737,7 +7740,7 @@ var IframeOpener = function() {
 
 module.exports = new IframeOpener();
 
-},{"lodash":13}],16:[function(_dereq_,module,exports){
+},{"lodash":14}],17:[function(_dereq_,module,exports){
 var JsonParser = {
   parse: function(text, callback) {
     var tryParse = function(text) {
@@ -7757,10 +7760,10 @@ var JsonParser = {
 
 module.exports = JsonParser;
 
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 var MessagePoster = function() {
   this.postMessage = function(window, message, targetOrigin) {
-    console.log('Posting the following message:');
+    console.log('Posting the following message to ' + targetOrigin + ':');
     console.log(message);
     window.postMessage(JSON.stringify(message), targetOrigin);
   };
@@ -7768,7 +7771,7 @@ var MessagePoster = function() {
 
 module.exports = new MessagePoster();
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var UUID = _dereq_('uuid-js');
 
 module.exports = {
@@ -7777,7 +7780,7 @@ module.exports = {
   }
 };
 
-},{"uuid-js":14}],19:[function(_dereq_,module,exports){
+},{"uuid-js":15}],20:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
@@ -7785,13 +7788,15 @@ var _ = _dereq_('lodash');
 var WormholeMessageSender = _dereq_('./wormhole_message_sender');
 var wormholeMessageParser = _dereq_('./wormhole_message_parser');
 var uuidGenerator = _dereq_('./uuid_generator');
+var liteUrl = _dereq_('lite-url');
 
-var Wormhole = function(wormholeWindow, origin) {
+var Wormhole = function(wormholeWindow, url) {
+  var wormholeOrigin = liteUrl(url).origin;
   var subscribeCallbacks = {};
   var publishResolves = {};
   var currentWindow = window;
   var wormholeReady = false;
-  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow);
+  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
   var self = this;
   pendingMessages = [];
 
@@ -7802,32 +7807,32 @@ var Wormhole = function(wormholeWindow, origin) {
       });
     };
 
-    // if (event.origin == origin) {
-    var eventData = jsonParser.parse(event.data);
-    if (eventData) {
-      var wormholeMessage = wormholeMessageParser.parse(eventData);
-      console.log('Received :');
-      console.log(wormholeMessage);
-      if (wormholeMessage.type === 'publish') {
-        console.log(subscribeCallbacks[wormholeMessage.topic]);
-        _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-          var respond = function(data) {
-            wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
-          }
-          var responseData = callback(wormholeMessage.data, respond);
-        });
-        wormholeReady = true;
-        sendPendingMessages();
-      } else if (wormholeMessage.type === 'response') {
-        publishResolves[wormholeMessage.uuid](wormholeMessage.data);
-      } else if (wormholeMessage.type === 'beacon') {
-        wormholeMessageSender.sendReady();
-      } else if (wormholeMessage.type === 'ready') {
-        wormholeReady = true;
-        sendPendingMessages();
+    if (event.origin === wormholeOrigin) {
+      var eventData = jsonParser.parse(event.data);
+      if (eventData) {
+        var wormholeMessage = wormholeMessageParser.parse(eventData);
+        console.log('Received :');
+        console.log(wormholeMessage);
+        if (wormholeMessage.type === 'publish') {
+          console.log(subscribeCallbacks[wormholeMessage.topic]);
+          _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
+            var respond = function(data) {
+              wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+            }
+            var responseData = callback(wormholeMessage.data, respond);
+          });
+          wormholeReady = true;
+          sendPendingMessages();
+        } else if (wormholeMessage.type === 'response') {
+          publishResolves[wormholeMessage.uuid](wormholeMessage.data);
+        } else if (wormholeMessage.type === 'beacon') {
+          wormholeMessageSender.sendReady();
+        } else if (wormholeMessage.type === 'ready') {
+          wormholeReady = true;
+          sendPendingMessages();
+        }
       }
     }
-    // }
   };
   eventListener.add(currentWindow, 'message', handleMessage);
 
@@ -7865,7 +7870,7 @@ var Wormhole = function(wormholeWindow, origin) {
 
 module.exports = Wormhole;
 
-},{"./json_parser.js":16,"./uuid_generator":18,"./wormhole_message_parser":22,"./wormhole_message_sender":23,"es6-promise":2,"eventlistener":12,"lodash":13}],20:[function(_dereq_,module,exports){
+},{"./json_parser.js":17,"./uuid_generator":19,"./wormhole_message_parser":23,"./wormhole_message_sender":24,"es6-promise":2,"eventlistener":12,"lite-url":13,"lodash":14}],21:[function(_dereq_,module,exports){
 var Wormhole = _dereq_('./wormhole');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -7876,15 +7881,13 @@ var WormholeCreator = function(iframeOpener) {
 
   this.opening = function(source) {
     iframe = iframeOpener.open(source);
-    console.log(iframe);
-    // console.log(iframe.contentWindow);
     return new Wormhole(iframe.contentWindow, source);
   };
 };
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"./iframe_opener":15,"./wormhole":19}],21:[function(_dereq_,module,exports){
+},{"./iframe_opener":16,"./wormhole":20}],22:[function(_dereq_,module,exports){
 var WormholeMessageBuilder = function() {
   var WORMHOLE_KEY = '__wormhole__';
   var TOPIC_KEY = '__topic__';
@@ -7906,7 +7909,7 @@ var WormholeMessageBuilder = function() {
 
 module.exports = new WormholeMessageBuilder();
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 var WormholeMessageParser = function() {
   var WORMHOLE_KEY = '__wormhole__';
   var TOPIC_KEY = '__topic__';
@@ -7927,34 +7930,34 @@ var WormholeMessageParser = function() {
 
 module.exports = new WormholeMessageParser();
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var messagePoster = _dereq_('./message_poster');
 
-var WormholeMessageSender = function(wormholeWindow) {
+var WormholeMessageSender = function(wormholeWindow, origin) {
   this.publish = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'publish', topic: topic, data: data, uuid: uuid});
-    messagePoster.postMessage(wormholeWindow, message, '*');
+    messagePoster.postMessage(wormholeWindow, message, origin);
   };
 
   this.respond = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data, uuid: uuid});
-    messagePoster.postMessage(wormholeWindow, message, '*');
+    messagePoster.postMessage(wormholeWindow, message, origin);
   };
 
   this.sendReady = function() {
     var message = wormholeMessageBuilder.build({type: 'ready'});
-    messagePoster.postMessage(wormholeWindow, message, '*');
+    messagePoster.postMessage(wormholeWindow, message, origin);
   };
 
   this.sendBeacon = function() {
     var message = wormholeMessageBuilder.build({type: 'beacon'});
-    messagePoster.postMessage(wormholeWindow, message, '*');
+    messagePoster.postMessage(wormholeWindow, message, origin);
   };
 };
 
 module.exports = WormholeMessageSender;
 
-},{"./message_poster":17,"./wormhole_message_builder":21}]},{},[20])
-(20)
+},{"./message_poster":18,"./wormhole_message_builder":22}]},{},[21])
+(21)
 });
