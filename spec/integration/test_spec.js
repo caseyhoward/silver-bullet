@@ -12,7 +12,7 @@ describe('wormhole', function() {
     testWormhole.destroy();
   });
 
-  it.only('works', function(done) {
+  it('works', function(done) {
     var logInPromise = testWormhole.publish('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
