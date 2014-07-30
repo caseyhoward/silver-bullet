@@ -7,14 +7,37 @@ var wormholeMessageParser = require('./wormhole_message_parser');
 var uuidGenerator = require('./uuid_generator');
 var liteUrl = require('lite-url');
 
-var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, pendingMessages, subscribeCallbacks, publishResolves, wormholeMessageSender) {
-  var handleMessage = function(event) {
-    var sendPendingMessages = function() {
-      _.each(pendingMessages, function(message) {
-        wormholeMessageSender.publish(message.topic, message.data, message.uuid);
-      });
-    };
+var WormholeReadinessChecker = function(wormholeMessageReceiver) {
+  var resolves = [];
 
+  wormholeMessageReceiver.on('ready', function() {
+    _.each(resolves, function(resolve) { resolve(); });
+  })
+
+  this.whenReady = function() {
+    var promise = new Promise(function(resolve, reject) {
+      resolves.push(resolve);
+    });
+    return promise;
+  };
+};
+
+var WormholeBeaconSender = function(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker) {
+  var wormholeReady = false;
+  var sendBeaconsUntilReady = function() {
+    if (!wormholeReady) {
+      wormholeMessageSender.sendBeacon();
+      setTimeout(sendBeaconsUntilReady, 1000);
+    }
+  };
+  setTimeout(sendBeaconsUntilReady, 100);
+  wormholeReadinessChecker.whenReady().then(function() { wormholeReady = true; });
+};
+
+var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender) {
+  var callbacks = {ready: [], response: []};
+
+  var handleMessage = function(event) {
     if (event.origin === wormholeOrigin) {
       var eventData = jsonParser.parse(event.data);
       if (eventData) {
@@ -29,18 +52,21 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, pendingMe
             }
             var responseData = callback(wormholeMessage.data, respond);
           });
-          wormholeReady = true;
-          sendPendingMessages();
+          // wormholeReady = true;
+          // sendPendingMessages();
         } else if (wormholeMessage.type === 'response') {
-          publishResolves[wormholeMessage.uuid](wormholeMessage.data);
+          _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
         } else if (wormholeMessage.type === 'beacon') {
           wormholeMessageSender.sendReady();
         } else if (wormholeMessage.type === 'ready') {
-          wormholeReady = true;
-          sendPendingMessages();
+          _.each(callbacks['ready'], function(callback) { callback(); });
         }
       }
     }
+  };
+
+  this.on = function(type, callback) {
+    callbacks[type].push(callback);
   };
 
   this.startListening = function() {
@@ -52,33 +78,19 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, pendingMe
   };
 }
 
-var Wormhole = function(wormholeWindow, url) {
-  var wormholeOrigin = liteUrl(url).origin;
-  var subscribeCallbacks = {};
+var WormholeMessagePublisher = function(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker) {
+  var pendingMessages = [];
   var publishResolves = {};
   var wormholeReady = false;
-  var self = this;
-  pendingMessages = [];
-  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
-  var wormholeMessageReceiver = new WormholeMessageReceiver(wormholeWindow, wormholeOrigin, pendingMessages, subscribeCallbacks, publishResolves, wormholeMessageSender);
-  wormholeMessageReceiver.startListening();
 
-  var sendBeaconsUntilReady = function() {
-    if (!wormholeReady) {
-      wormholeMessageSender.sendBeacon();
-      setTimeout(sendBeaconsUntilReady, 1000);
-    }
+  var sendPendingMessages = function() {
+    wormholeReady = true;
+    _.each(pendingMessages, function(message) {
+      wormholeMessageSender.publish(message.topic, message.data, message.uuid);
+    });
   };
 
-  setTimeout(sendBeaconsUntilReady, 100);
-
-  this.subscribe = function(topic, callback) {
-    subscribeCallbacks[topic] = subscribeCallbacks[topic] || [];
-    subscribeCallbacks[topic].push(callback);
-  };
-
-  this.publish = function(topic, data) {
-    // outgoingMessageQueue.push(topic, data);
+  this.push = function(topic, data) {
     var uuid = uuidGenerator.generate();
     if (wormholeReady) {
       wormholeMessageSender.publish(topic, data, uuid);
@@ -88,6 +100,34 @@ var Wormhole = function(wormholeWindow, url) {
     return new Promise(function(resolve, reject) {
       publishResolves[uuid] = resolve;
     });
+  };
+
+  wormholeReadinessChecker.whenReady().then(sendPendingMessages);
+
+  wormholeMessageReceiver.on('response', function(wormholeMessage) {
+    publishResolves[wormholeMessage.uuid](wormholeMessage.data);
+  });
+}
+
+var Wormhole = function(wormholeWindow, url) {
+  var wormholeOrigin = liteUrl(url).origin;
+  var subscribeCallbacks = {};
+  var wormholeReady = false;
+  var self = this;
+  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
+  var wormholeMessageReceiver = new WormholeMessageReceiver(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender);
+  var wormholeReadinessChecker = new WormholeReadinessChecker(wormholeMessageReceiver);
+  var wormholeMessagePublisher = new WormholeMessagePublisher(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker);
+  new WormholeBeaconSender(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker);
+  wormholeMessageReceiver.startListening();
+
+  this.subscribe = function(topic, callback) {
+    subscribeCallbacks[topic] = subscribeCallbacks[topic] || [];
+    subscribeCallbacks[topic].push(callback);
+  };
+
+  this.publish = function(topic, data) {
+    return wormholeMessagePublisher.push(topic, data);
   };
 
   this.destroy = function() {
