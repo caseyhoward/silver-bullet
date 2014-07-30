@@ -7790,16 +7790,20 @@ var wormholeMessageParser = _dereq_('./wormhole_message_parser');
 var uuidGenerator = _dereq_('./uuid_generator');
 var liteUrl = _dereq_('lite-url');
 
-var Wormhole = function(wormholeWindow, url) {
-  var wormholeOrigin = liteUrl(url).origin;
-  var subscribeCallbacks = {};
-  var publishResolves = {};
-  var currentWindow = window;
-  var wormholeReady = false;
-  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
-  var self = this;
-  pendingMessages = [];
+var wormholeReadinessChecker = function(wormholeMessageSender, wormholeMessageReceiver) {
+  var isReady = false;
+  var sendBeaconsUntilReady = function() {
+    if (!wormholeReady) {
+      wormholeMessageSender.sendBeacon();
+      setTimeout(sendBeaconsUntilReady, 1000);
+    }
+  };
+  setTimeout(sendBeaconsUntilReady, 100);
+  wormholeMessageReceiver.receiveBeacon(function() { isReady = true; });
+  this.isReady = function() { return isReady; };
+};
 
+var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, pendingMessages, subscribeCallbacks, publishResolves, wormholeMessageSender) {
   var handleMessage = function(event) {
     var sendPendingMessages = function() {
       _.each(pendingMessages, function(message) {
@@ -7834,7 +7838,26 @@ var Wormhole = function(wormholeWindow, url) {
       }
     }
   };
-  eventListener.add(currentWindow, 'message', handleMessage);
+
+  this.startListening = function() {
+    eventListener.add(window, 'message', handleMessage);
+  };
+
+  this.stopListening = function() {
+    eventListener.remove(window, 'message', handleMessage);
+  };
+}
+
+var Wormhole = function(wormholeWindow, url) {
+  var wormholeOrigin = liteUrl(url).origin;
+  var subscribeCallbacks = {};
+  var publishResolves = {};
+  var wormholeReady = false;
+  var self = this;
+  pendingMessages = [];
+  var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
+  var wormholeMessageReceiver = new WormholeMessageReceiver(wormholeWindow, wormholeOrigin, pendingMessages, subscribeCallbacks, publishResolves, wormholeMessageSender);
+  wormholeMessageReceiver.startListening();
 
   var sendBeaconsUntilReady = function() {
     if (!wormholeReady) {
@@ -7864,7 +7887,7 @@ var Wormhole = function(wormholeWindow, url) {
   };
 
   this.destroy = function() {
-    eventListener.remove(window, 'message', handleMessage);
+    wormholeMessageReceiver.stopListening();
   };
 };
 
