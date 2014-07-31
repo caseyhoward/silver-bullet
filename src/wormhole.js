@@ -4,7 +4,7 @@ var jsonParser = require('./json_parser.js');
 var _ = require('lodash');
 var WormholeMessageSender = require('./wormhole_message_sender');
 var wormholeMessageParser = require('./wormhole_message_parser');
-var uuidGenerator = require('./uuid_generator');
+var WormholeMessagePublisher = require('./wormhole_message_publisher');
 var liteUrl = require('lite-url');
 
 var WormholeReadinessChecker = function(wormholeMessageReceiver) {
@@ -52,8 +52,6 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribe
             }
             var responseData = callback(wormholeMessage.data, respond);
           });
-          // wormholeReady = true;
-          // sendPendingMessages();
         } else if (wormholeMessage.type === 'response') {
           _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
         } else if (wormholeMessage.type === 'beacon') {
@@ -78,41 +76,9 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribe
   };
 }
 
-var WormholeMessagePublisher = function(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker) {
-  var pendingMessages = [];
-  var publishResolves = {};
-  var wormholeReady = false;
-
-  var sendPendingMessages = function() {
-    wormholeReady = true;
-    _.each(pendingMessages, function(message) {
-      wormholeMessageSender.publish(message.topic, message.data, message.uuid);
-    });
-  };
-
-  this.push = function(topic, data) {
-    var uuid = uuidGenerator.generate();
-    if (wormholeReady) {
-      wormholeMessageSender.publish(topic, data, uuid);
-    } else {
-      pendingMessages.push({topic: topic, data: data, uuid: uuid});
-    }
-    return new Promise(function(resolve, reject) {
-      publishResolves[uuid] = resolve;
-    });
-  };
-
-  wormholeReadinessChecker.whenReady().then(sendPendingMessages);
-
-  wormholeMessageReceiver.on('response', function(wormholeMessage) {
-    publishResolves[wormholeMessage.uuid](wormholeMessage.data);
-  });
-}
-
 var Wormhole = function(wormholeWindow, url) {
   var wormholeOrigin = liteUrl(url).origin;
   var subscribeCallbacks = {};
-  var wormholeReady = false;
   var self = this;
   var wormholeMessageSender = new WormholeMessageSender(wormholeWindow, wormholeOrigin);
   var wormholeMessageReceiver = new WormholeMessageReceiver(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender);

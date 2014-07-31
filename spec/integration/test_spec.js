@@ -13,9 +13,13 @@ describe('wormhole', function() {
     var logInPromise = testWormhole.publish('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
+    var logInPromise = testWormhole.publish('log in', {username: 'bad'}).catch(function(error) {
+      expect(error).to.equal('bad username');
+    });
     var logOutPromise = testWormhole.publish('log out').then(function(result) {
       expect(result).to.equal('successful log out');
     });
+
     Promise.all([logInPromise, logOutPromise]).then(function() {
       testWormhole.destroy();
       done();
