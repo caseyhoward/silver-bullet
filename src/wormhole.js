@@ -1,36 +1,9 @@
-var Promise = require('es6-promise').Promise;
-var _ = require('lodash');
 var WormholeMessageSender = require('./wormhole_message_sender');
 var WormholeMessagePublisher = require('./wormhole_message_publisher');
 var WormholeMessageReceiver = require('./wormhole_message_receiver');
+var WormholeBeaconSender = require('./wormhole_beacon_sender');
+var WormholeReadinessChecker = require('./wormhole_readiness_checker');
 var liteUrl = require('lite-url');
-
-var WormholeReadinessChecker = function(wormholeMessageReceiver) {
-  var resolves = [];
-
-  wormholeMessageReceiver.on('ready', function() {
-    _.each(resolves, function(resolve) { resolve(); });
-  })
-
-  this.whenReady = function() {
-    var promise = new Promise(function(resolve, reject) {
-      resolves.push(resolve);
-    });
-    return promise;
-  };
-};
-
-var WormholeBeaconSender = function(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker) {
-  var wormholeReady = false;
-  var sendBeaconsUntilReady = function() {
-    if (!wormholeReady) {
-      wormholeMessageSender.sendBeacon();
-      setTimeout(sendBeaconsUntilReady, 1000);
-    }
-  };
-  setTimeout(sendBeaconsUntilReady, 100);
-  wormholeReadinessChecker.whenReady().then(function() { wormholeReady = true; });
-};
 
 var Wormhole = function(wormholeWindow, url) {
   var wormholeOrigin = liteUrl(url).origin;
