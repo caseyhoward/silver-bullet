@@ -1,17 +1,13 @@
-var WormholeMessageParser = function() {
-  var WORMHOLE_KEY = '__wormhole__';
-  var TOPIC_KEY = '__topic__';
-  var DATA_KEY = '__data__';
-  var TYPE_KEY = '__type__';
-  var UUID_KEY = '__uuid__';
+var messageKeys = require('./message_keys');
 
+var WormholeMessageParser = function() {
   this.parse = function(message) {
     var data = {};
-    var wormholeData = message[WORMHOLE_KEY];
-    data.type = wormholeData[TYPE_KEY];
-    data.topic = wormholeData[TOPIC_KEY];
-    data.data = wormholeData[DATA_KEY];
-    data.uuid = wormholeData[UUID_KEY];
+    var wormholeData = message[messageKeys.WORMHOLE];
+    data.type = wormholeData[messageKeys.TYPE];
+    data.topic = wormholeData[messageKeys.TOPIC];
+    data.data = wormholeData[messageKeys.DATA];
+    data.uuid = wormholeData[messageKeys.UUID];
     return data;
   };
 };
