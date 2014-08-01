@@ -1,15 +1,19 @@
 var wormholeMessageBuilder = require('../src/wormhole_message_builder');
 var WormholeMessageSender = require('../src/wormhole_message_sender');
-var messagePoster = require('../src/message_poster');
+var MessagePoster = require('../src/message_poster');
 
 describe('wormholeMessageSender', function() {
-  var wormholeMessageSender, sandbox, message, wormholeWindow;
+  var wormholeMessageSender, sandbox, message, wormholeWindow, messagePoster;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    message = {a: 1, uuid: 'some uuid'};
     wormholeWindow = {};
-    sandbox.mock(messagePoster).expects('postMessage').withArgs(wormholeWindow, message, 'http://origin.host');
+    message = {a: 1, uuid: 'some uuid'};
+    messagePoster = {
+      postMessage: function() {}
+    }
+    sandbox.mock(messagePoster).expects('postMessage').withArgs(message);
+    sandbox.stub(MessagePoster, 'create').withArgs(wormholeWindow, 'http://origin.host').returns(messagePoster);
     wormholeMessageSender = new WormholeMessageSender(wormholeWindow, 'http://origin.host');
   });
 

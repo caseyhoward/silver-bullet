@@ -7761,15 +7761,19 @@ var JsonParser = {
 module.exports = JsonParser;
 
 },{}],18:[function(_dereq_,module,exports){
-var MessagePoster = function() {
-  this.postMessage = function(window, message, targetOrigin) {
+var MessagePoster = function(window, targetOrigin) {
+  this.postMessage = function(message) {
     console.log('Posting the following message to ' + targetOrigin + ':');
     console.log(message);
     window.postMessage(JSON.stringify(message), targetOrigin);
   };
 };
 
-module.exports = new MessagePoster();
+MessagePoster.create = function(window, targetOrigin) {
+  return new MessagePoster(window, targetOrigin);
+};
+
+module.exports = MessagePoster;
 
 },{}],19:[function(_dereq_,module,exports){
 var UUID = _dereq_('uuid-js');
@@ -7986,27 +7990,29 @@ module.exports = WormholeMessageReceiver;
 
 },{"./json_parser.js":17,"./wormhole_message_parser":24,"eventlistener":12,"lodash":14}],27:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
-var messagePoster = _dereq_('./message_poster');
+var MessagePoster = _dereq_('./message_poster');
 
 var WormholeMessageSender = function(wormholeWindow, origin) {
+  var messagePoster = MessagePoster.create(wormholeWindow, origin);
+
   this.publish = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'publish', topic: topic, data: data, uuid: uuid});
-    messagePoster.postMessage(wormholeWindow, message, origin);
+    messagePoster.postMessage(message);
   };
 
   this.respond = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data, uuid: uuid});
-    messagePoster.postMessage(wormholeWindow, message, origin);
+    messagePoster.postMessage(message);
   };
 
   this.sendReady = function() {
     var message = wormholeMessageBuilder.build({type: 'ready'});
-    messagePoster.postMessage(wormholeWindow, message, origin);
+    messagePoster.postMessage(message);
   };
 
   this.sendBeacon = function() {
     var message = wormholeMessageBuilder.build({type: 'beacon'});
-    messagePoster.postMessage(wormholeWindow, message, origin);
+    messagePoster.postMessage(message);
   };
 };
 
