@@ -6,7 +6,7 @@ var WormholeReadinessChecker = function(wormholeMessageReceiver) {
 
   wormholeMessageReceiver.on('ready', function() {
     _.each(resolves, function(resolve) { resolve(); });
-  })
+  });
 
   this.whenReady = function() {
     var promise = new Promise(function(resolve, reject) {
