@@ -1,34 +1,33 @@
-wormhole-js
-===========
+# wormhole.js #
 
-A modern abstraction of cross domain communication via iframes and postMessage.
+A modern abstraction of cross domain communication via iframes and postMessage with the goal of simplifying usage, producing fewer bugs, being easy to test, and providing robustness.
 
+## Examples ##
 
+### Simple usage
 
+```js
+  var testWormhole = wormhole.open('http://parent-page.com');
+  testWormhole.subscribe('hi', function(data, respond) {
+    respond('hello there');
+  });
+```
 
-= Development
-Before running npm install
+```js
+  var testWormhole = wormhole.opening('http://iframed-page.com');
+  testWormhole.publish('hi').then(function(result) {
+    console.log(result);
+  });
+```
 
+Logs 'hello there'
 
+## Installation
+TODO: npm install wormhole
 
+## Development
+You must have the test-server running:
+    gulp test-server
 
-JSON Format
-Publish
-  {
-    __wormhole__: {
-      __type__: 'publish',
-      __topic__: 'test',
-      __data__: '{"blah": 123}'
-      __uuid__: 'fasdfasfada-asdf-asdf-asdf-asdfasdf'
-    }
-  }
-
-Subscribe reply to publish
-  {
-    __wormhole__: {
-      __type__: 'response',
-      __data__: '{"blah": 123}',  // return value of subscribe callback json stringified
-      __uuid__: 'fasdfasfada-asdf-asdf-asdf-asdfasdf'
-    }
-  }
-
+Run tests and build:
+    bin/build
