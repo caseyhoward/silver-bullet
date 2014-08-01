@@ -7826,6 +7826,10 @@ var Wormhole = function(wormholeWindow, url) {
   };
 };
 
+Wormhole.create = function(wormholeWindow, url) {
+  return new Wormhole(wormholeWindow, url);
+};
+
 module.exports = Wormhole;
 
 },{"./wormhole_beacon_sender":22,"./wormhole_message_publisher":26,"./wormhole_message_receiver":27,"./wormhole_message_sender":28,"./wormhole_readiness_checker":29,"lite-url":13}],22:[function(_dereq_,module,exports){
@@ -7849,7 +7853,8 @@ var iframeOpener = _dereq_('./iframe_opener');
 
 var WormholeCreator = function(iframeOpener) {
   this.open = function(origin) {
-    return new Wormhole(parent, origin);
+    // TODO: Refactor. parent comes out of nowhere.
+    return Wormhole.create(parent, origin);
   };
 
   this.opening = function(sourceOrIframe) {
@@ -7860,7 +7865,7 @@ var WormholeCreator = function(iframeOpener) {
       source = sourceOrIframe.src;
       iframe = sourceOrIframe;
     }
-    return new Wormhole(iframe.contentWindow, source);
+    return Wormhole.create(iframe.contentWindow, source);
   };
 };
 
@@ -8027,7 +8032,7 @@ var WormholeReadinessChecker = function(wormholeMessageReceiver) {
 
   wormholeMessageReceiver.on('ready', function() {
     _.each(resolves, function(resolve) { resolve(); });
-  })
+  });
 
   this.whenReady = function() {
     var promise = new Promise(function(resolve, reject) {

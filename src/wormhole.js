@@ -30,4 +30,8 @@ var Wormhole = function(wormholeWindow, url) {
   };
 };
 
+Wormhole.create = function(wormholeWindow, url) {
+  return new Wormhole(wormholeWindow, url);
+};
+
 module.exports = Wormhole;

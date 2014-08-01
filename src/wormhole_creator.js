@@ -3,7 +3,8 @@ var iframeOpener = require('./iframe_opener');
 
 var WormholeCreator = function(iframeOpener) {
   this.open = function(origin) {
-    return new Wormhole(parent, origin);
+    // TODO: Refactor. parent comes out of nowhere.
+    return Wormhole.create(parent, origin);
   };
 
   this.opening = function(sourceOrIframe) {
@@ -14,7 +15,7 @@ var WormholeCreator = function(iframeOpener) {
       source = sourceOrIframe.src;
       iframe = sourceOrIframe;
     }
-    return new Wormhole(iframe.contentWindow, source);
+    return Wormhole.create(iframe.contentWindow, source);
   };
 };
 
