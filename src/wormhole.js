@@ -15,7 +15,7 @@ var Wormhole = function(wormholeWindow, url) {
   var wormholeReadinessChecker = new WormholeReadinessChecker(wormholeMessageReceiver);
   var pendingMessageQueue = new PendingMessageQueue(wormholeMessageSender, wormholeReadinessChecker);
   var wormholeMessagePublisher = new WormholeMessagePublisher(wormholeMessageReceiver, pendingMessageQueue);
-  new WormholeBeaconSender(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker);
+  new WormholeBeaconSender(wormholeMessageSender, wormholeReadinessChecker, setTimeout);
   wormholeMessageReceiver.startListening();
 
   this.subscribe = function(topic, callback) {

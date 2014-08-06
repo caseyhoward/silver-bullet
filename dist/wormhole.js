@@ -7838,7 +7838,7 @@ var Wormhole = function(wormholeWindow, url) {
   var wormholeReadinessChecker = new WormholeReadinessChecker(wormholeMessageReceiver);
   var pendingMessageQueue = new PendingMessageQueue(wormholeMessageSender, wormholeReadinessChecker);
   var wormholeMessagePublisher = new WormholeMessagePublisher(wormholeMessageReceiver, pendingMessageQueue);
-  new WormholeBeaconSender(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker);
+  new WormholeBeaconSender(wormholeMessageSender, wormholeReadinessChecker, setTimeout);
   wormholeMessageReceiver.startListening();
 
   this.subscribe = function(topic, callback) {
@@ -7862,16 +7862,18 @@ Wormhole.create = function(wormholeWindow, url) {
 module.exports = Wormhole;
 
 },{"./pending_message_queue":20,"./wormhole_beacon_sender":23,"./wormhole_message_publisher":27,"./wormhole_message_receiver":28,"./wormhole_message_sender":29,"./wormhole_readiness_checker":30,"lite-url":13}],23:[function(_dereq_,module,exports){
-var WormholeBeaconSender = function(wormholeMessageSender, wormholeMessageReceiver, wormholeReadinessChecker) {
-  var wormholeReady = false;
-  var sendBeaconsUntilReady = function() {
-    if (!wormholeReady) {
-      wormholeMessageSender.sendBeacon();
-      setTimeout(sendBeaconsUntilReady, 1000);
-    }
+var WormholeBeaconSender = function(wormholeMessageSender, wormholeReadinessChecker, setTimeout) {
+  this.start = function() {
+    var wormholeReady = false;
+    var sendBeaconsUntilReady = function() {
+      if (!wormholeReady) {
+        wormholeMessageSender.sendBeacon();
+        setTimeout(sendBeaconsUntilReady, 100);
+      }
+    };
+    sendBeaconsUntilReady();
+    wormholeReadinessChecker.whenReady().then(function() {  wormholeReady = true; });
   };
-  setTimeout(sendBeaconsUntilReady, 100);
-  wormholeReadinessChecker.whenReady().then(function() { wormholeReady = true; });
 };
 
 module.exports = WormholeBeaconSender;
