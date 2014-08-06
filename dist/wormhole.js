@@ -7785,6 +7785,33 @@ MessagePoster.create = function(window, targetOrigin) {
 module.exports = MessagePoster;
 
 },{}],20:[function(_dereq_,module,exports){
+var eventListener = _dereq_('eventlistener');
+var jsonParser = _dereq_('./json_parser.js');
+
+var MessageReceiver = function(window, origin, callback) {
+  var handleMessage = function(event) {
+    if (event.origin === origin) {
+      var eventData = jsonParser.parse(event.data);
+      callback(eventData);
+    }
+  };
+
+  this.startListening = function() {
+    eventListener.add(window, 'message', handleMessage);
+  };
+
+  this.stopListening = function() {
+    eventListener.remove(window, 'message', handleMessage);
+  };
+};
+
+MessageReceiver.create = function(window, origin, callback) {
+  return new MessageReceiver(window, origin, callback);
+};
+
+module.exports = MessageReceiver;
+
+},{"./json_parser.js":17,"eventlistener":12}],21:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var PendingMessageQueue = function(wormholeMessageSender, wormholeReadinessChecker) {
@@ -7811,7 +7838,7 @@ var PendingMessageQueue = function(wormholeMessageSender, wormholeReadinessCheck
 
 module.exports = PendingMessageQueue;
 
-},{"lodash":14}],21:[function(_dereq_,module,exports){
+},{"lodash":14}],22:[function(_dereq_,module,exports){
 var UUID = _dereq_('uuid-js');
 
 module.exports = {
@@ -7820,7 +7847,7 @@ module.exports = {
   }
 };
 
-},{"uuid-js":15}],22:[function(_dereq_,module,exports){
+},{"uuid-js":15}],23:[function(_dereq_,module,exports){
 var WormholeMessageSender = _dereq_('./wormhole_message_sender');
 var WormholeMessagePublisher = _dereq_('./wormhole_message_publisher');
 var WormholeMessageReceiver = _dereq_('./wormhole_message_receiver');
@@ -7862,7 +7889,7 @@ Wormhole.create = function(wormholeWindow, url) {
 
 module.exports = Wormhole;
 
-},{"./pending_message_queue":20,"./wormhole_beacon_sender":23,"./wormhole_message_publisher":27,"./wormhole_message_receiver":28,"./wormhole_message_sender":29,"./wormhole_readiness_checker":30,"lite-url":13}],23:[function(_dereq_,module,exports){
+},{"./pending_message_queue":21,"./wormhole_beacon_sender":24,"./wormhole_message_publisher":28,"./wormhole_message_receiver":29,"./wormhole_message_sender":30,"./wormhole_readiness_checker":31,"lite-url":13}],24:[function(_dereq_,module,exports){
 var WormholeBeaconSender = function(wormholeMessageSender, wormholeReadinessChecker, setTimeout) {
   this.start = function() {
     var wormholeReady = false;
@@ -7879,7 +7906,7 @@ var WormholeBeaconSender = function(wormholeMessageSender, wormholeReadinessChec
 
 module.exports = WormholeBeaconSender;
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var Wormhole = _dereq_('./wormhole');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -7903,7 +7930,7 @@ var WormholeCreator = function(iframeOpener) {
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"./iframe_opener":16,"./wormhole":22}],25:[function(_dereq_,module,exports){
+},{"./iframe_opener":16,"./wormhole":23}],26:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('./message_keys');
 
 var WormholeMessageBuilder = function() {
@@ -7920,7 +7947,7 @@ var WormholeMessageBuilder = function() {
 
 module.exports = new WormholeMessageBuilder();
 
-},{"./message_keys":18}],26:[function(_dereq_,module,exports){
+},{"./message_keys":18}],27:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('./message_keys');
 
 var WormholeMessageParser = function() {
@@ -7937,7 +7964,7 @@ var WormholeMessageParser = function() {
 
 module.exports = new WormholeMessageParser();
 
-},{"./message_keys":18}],27:[function(_dereq_,module,exports){
+},{"./message_keys":18}],28:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var uuidGenerator = _dereq_('./uuid_generator');
 
@@ -7959,57 +7986,50 @@ var WormholeMessagePublisher = function(wormholeMessageReceiver, pendingMessageQ
 
 module.exports = WormholeMessagePublisher;
 
-},{"./uuid_generator":21,"es6-promise":2}],28:[function(_dereq_,module,exports){
+},{"./uuid_generator":22,"es6-promise":2}],29:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 var wormholeMessageParser = _dereq_('./wormhole_message_parser');
+var MessageReceiver = _dereq_('./message_receiver');
 
 var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender) {
   var callbacks = {ready: [], response: []};
 
-  var handleMessage = function(event) {
-    if (event.origin === wormholeOrigin) {
-      var eventData = jsonParser.parse(event.data);
-      if (eventData) {
-        var wormholeMessage = wormholeMessageParser.parse(eventData);
-        console.log('Received :');
-        console.log(wormholeMessage);
-        if (wormholeMessage.type === 'publish') {
-          console.log(subscribeCallbacks[wormholeMessage.topic]);
-          _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-            var respond = function(data) {
-              wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
-            }
-            var responseData = callback(wormholeMessage.data, respond);
-          });
-        } else if (wormholeMessage.type === 'response') {
-          _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
-        } else if (wormholeMessage.type === 'beacon') {
-          wormholeMessageSender.sendReady();
-        } else if (wormholeMessage.type === 'ready') {
-          _.each(callbacks['ready'], function(callback) { callback(); });
-        }
+  var messageReceiver = new MessageReceiver(window, wormholeOrigin, function(eventData) {
+    if (eventData) {
+      var wormholeMessage = wormholeMessageParser.parse(eventData);
+      console.log('Received :');
+      console.log(wormholeMessage);
+      if (wormholeMessage.type === 'publish') {
+        console.log(subscribeCallbacks[wormholeMessage.topic]);
+        _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
+          var respond = function(data) {
+            wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+          }
+          var responseData = callback(wormholeMessage.data, respond);
+        });
+      } else if (wormholeMessage.type === 'response') {
+        _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
+      } else if (wormholeMessage.type === 'beacon') {
+        wormholeMessageSender.sendReady();
+      } else if (wormholeMessage.type === 'ready') {
+        _.each(callbacks['ready'], function(callback) { callback(); });
       }
     }
-  };
+  });
 
   this.on = function(type, callback) {
     callbacks[type].push(callback);
   };
 
-  this.startListening = function() {
-    eventListener.add(window, 'message', handleMessage);
-  };
-
-  this.stopListening = function() {
-    eventListener.remove(window, 'message', handleMessage);
-  };
+  this.startListening = messageReceiver.startListening;
+  this.stopListening = messageReceiver.stopListening;
 };
 
 module.exports = WormholeMessageReceiver;
 
-},{"./json_parser.js":17,"./wormhole_message_parser":26,"eventlistener":12,"lodash":14}],29:[function(_dereq_,module,exports){
+},{"./json_parser.js":17,"./message_receiver":20,"./wormhole_message_parser":27,"eventlistener":12,"lodash":14}],30:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var MessagePoster = _dereq_('./message_poster');
 
@@ -8039,7 +8059,7 @@ var WormholeMessageSender = function(wormholeWindow, origin) {
 
 module.exports = WormholeMessageSender;
 
-},{"./message_poster":19,"./wormhole_message_builder":25}],30:[function(_dereq_,module,exports){
+},{"./message_poster":19,"./wormhole_message_builder":26}],31:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var _ = _dereq_('lodash');
 
@@ -8060,6 +8080,6 @@ var WormholeReadinessChecker = function(wormholeMessageReceiver) {
 
 module.exports = WormholeReadinessChecker;
 
-},{"es6-promise":2,"lodash":14}]},{},[24])
-(24)
+},{"es6-promise":2,"lodash":14}]},{},[25])
+(25)
 });
