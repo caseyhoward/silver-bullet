@@ -1,7 +1,7 @@
 var WormholeBeaconSender = require('../src/wormhole_beacon_sender');
 var Promise = require('es6-promise').Promise;
 
-describe.only('WormholeBeaconSender', function() {
+describe('WormholeBeaconSender', function() {
   var wormholeBeaconSender, wormholeMessageSender, wormholeReadinessChecker;
   var readinessPromise, readinessResolve, test, sandbox;
 
@@ -50,6 +50,6 @@ describe.only('WormholeBeaconSender', function() {
       done();
     });
     readinessResolve();
-    sandbox.clock.tick(1); // We have to do this in phantom or the callback never gets resolved
+    sandbox.clock.tick(1); // We have to do this in phantom or the promise never gets resolved
   });
 });
