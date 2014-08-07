@@ -3,9 +3,10 @@ var eventListener = require('eventlistener');
 var jsonParser = require('./json_parser.js');
 var wormholeMessageParser = require('./wormhole_message_parser');
 var MessageReceiver = require('./message_receiver');
+var EventEmitter = require('./event_emitter');
 
 var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender) {
-  var callbacks = {ready: [], response: []};
+  var eventEmitter = EventEmitter.create();
 
   var messageReceiver = new MessageReceiver(window, wormholeOrigin, function(eventData) {
     if (eventData) {
@@ -19,17 +20,17 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribe
           var responseData = callback(wormholeMessage.data, respond);
         });
       } else if (wormholeMessage.type === 'response') {
-        _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
+        eventEmitter.emit('response', wormholeMessage);
       } else if (wormholeMessage.type === 'beacon') {
         wormholeMessageSender.sendReady();
       } else if (wormholeMessage.type === 'ready') {
-        _.each(callbacks['ready'], function(callback) { callback(); });
+        eventEmitter.emit('ready');
       }
     }
   });
 
   this.on = function(type, callback) {
-    callbacks[type].push(callback);
+    eventEmitter.on(type, callback);
   };
 
   this.startListening = messageReceiver.startListening;

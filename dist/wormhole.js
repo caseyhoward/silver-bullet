@@ -1,4 +1,309 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var o;"undefined"!=typeof window?o=window:"undefined"!=typeof global?o=global:"undefined"!=typeof self&&(o=self),o.wormhole=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      } else {
+        throw TypeError('Uncaught, unspecified "error" event.');
+      }
+      return false;
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        len = arguments.length;
+        args = new Array(len - 1);
+        for (i = 1; i < len; i++)
+          args[i - 1] = arguments[i];
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    len = arguments.length;
+    args = new Array(len - 1);
+    for (i = 1; i < len; i++)
+      args[i - 1] = arguments[i];
+
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    var m;
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  var ret;
+  if (!emitter._events || !emitter._events[type])
+    ret = 0;
+  else if (isFunction(emitter._events[type]))
+    ret = 1;
+  else
+    ret = emitter._events[type].length;
+  return ret;
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],2:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -63,13 +368,13 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],2:[function(_dereq_,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 "use strict";
 var Promise = _dereq_("./promise/promise").Promise;
 var polyfill = _dereq_("./promise/polyfill").polyfill;
 exports.Promise = Promise;
 exports.polyfill = polyfill;
-},{"./promise/polyfill":6,"./promise/promise":7}],3:[function(_dereq_,module,exports){
+},{"./promise/polyfill":7,"./promise/promise":8}],4:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 
@@ -163,7 +468,7 @@ function all(promises) {
 }
 
 exports.all = all;
-},{"./utils":11}],4:[function(_dereq_,module,exports){
+},{"./utils":12}],5:[function(_dereq_,module,exports){
 (function (process,global){
 "use strict";
 var browserGlobal = (typeof window !== 'undefined') ? window : {};
@@ -227,7 +532,7 @@ function asap(callback, arg) {
 
 exports.asap = asap;
 }).call(this,_dereq_("XCvoj2"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"XCvoj2":1}],5:[function(_dereq_,module,exports){
+},{"XCvoj2":2}],6:[function(_dereq_,module,exports){
 "use strict";
 var config = {
   instrument: false
@@ -243,7 +548,7 @@ function configure(name, value) {
 
 exports.config = config;
 exports.configure = configure;
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 (function (global){
 "use strict";
 /*global self*/
@@ -284,7 +589,7 @@ function polyfill() {
 
 exports.polyfill = polyfill;
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./promise":7,"./utils":11}],7:[function(_dereq_,module,exports){
+},{"./promise":8,"./utils":12}],8:[function(_dereq_,module,exports){
 "use strict";
 var config = _dereq_("./config").config;
 var configure = _dereq_("./config").configure;
@@ -496,7 +801,7 @@ function publishRejection(promise) {
 }
 
 exports.Promise = Promise;
-},{"./all":3,"./asap":4,"./config":5,"./race":8,"./reject":9,"./resolve":10,"./utils":11}],8:[function(_dereq_,module,exports){
+},{"./all":4,"./asap":5,"./config":6,"./race":9,"./reject":10,"./resolve":11,"./utils":12}],9:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 var isArray = _dereq_("./utils").isArray;
@@ -586,7 +891,7 @@ function race(promises) {
 }
 
 exports.race = race;
-},{"./utils":11}],9:[function(_dereq_,module,exports){
+},{"./utils":12}],10:[function(_dereq_,module,exports){
 "use strict";
 /**
   `RSVP.reject` returns a promise that will become rejected with the passed
@@ -634,7 +939,7 @@ function reject(reason) {
 }
 
 exports.reject = reject;
-},{}],10:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 "use strict";
 function resolve(value) {
   /*jshint validthis:true */
@@ -650,7 +955,7 @@ function resolve(value) {
 }
 
 exports.resolve = resolve;
-},{}],11:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 "use strict";
 function objectOrFunction(x) {
   return isFunction(x) || (typeof x === "object" && x !== null);
@@ -673,7 +978,7 @@ exports.objectOrFunction = objectOrFunction;
 exports.isFunction = isFunction;
 exports.isArray = isArray;
 exports.now = now;
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 (function(root,factory){
     if (typeof define === 'function' && define.amd) {
         define(factory);
@@ -698,10 +1003,10 @@ exports.now = now;
 		remove: wrap('removeEventListener', 'detachEvent')
 	};
 }));
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 /*! lite-url v0.1.1 29-07-2014 https://github.com/sadams/lite-url.git */
 (function(){"use strict";function a(a){var b=c[a];if("undefined"!=typeof b)return b;b={};for(var g=e.exec(a),h=f.length;h--;)b[f[h]]=g[h]||"";b.params={};var i=b.search?b.search.substring(b.search.indexOf("?")+1):"";return i.replace(d,function(a,c,d){c&&(b.params[c]=d)}),c[a]=b,b}var b=this,c={},d=/(?:^|&)([^&=]*)=?([^&]*)/g,e=/^(?:(?:(([^:\/#\?]+:)?(?:(?:\/\/)(?:(?:(?:([^:@\/#\?]+)(?:\:([^:@\/#\?]*))?)@)?(([^:\/#\?\]\[]+|\[[^\/\]@#?]+\])(?:\:([0-9]+))?))?)?)?((?:\/?(?:[^\/\?#]+\/+)*)(?:[^\?#]*)))?(\?[^#]+)?)(#.*)?/,f=["href","origin","protocol","username","password","host","hostname","port","pathname","search","hash"];return"undefined"!=typeof exports?("undefined"!=typeof module&&module.exports&&(exports=module.exports=a),exports.liteURL=a):b.liteURL=a,a}).call(this);
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 (function (global){
 /**
  * @license
@@ -7490,7 +7795,7 @@ exports.now = now;
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 /*
  * UUID-js: A js library to generate and parse UUIDs, TimeUUIDs and generate
  * TimeUUID based on dates for range selections.
@@ -7725,7 +8030,24 @@ UUIDjs.newTS = function() {
 
 module.exports = UUIDjs;
 
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
+var NodeEventEmitter = _dereq_('events').EventEmitter;
+
+var EventEmitter = function() {
+  var eventEmitter = new NodeEventEmitter();
+
+  this.on = eventEmitter.on;
+  this.emit = eventEmitter.emit;
+};
+
+EventEmitter.create = function() {
+  return new EventEmitter;
+};
+
+module.exports = EventEmitter;
+
+
+},{"events":1}],18:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var IframeOpener = function() {
@@ -7740,7 +8062,7 @@ var IframeOpener = function() {
 
 module.exports = new IframeOpener();
 
-},{"lodash":14}],17:[function(_dereq_,module,exports){
+},{"lodash":15}],19:[function(_dereq_,module,exports){
 var JsonParser = {
   parse: function(text, callback) {
     var tryParse = function(text) {
@@ -7760,7 +8082,7 @@ var JsonParser = {
 
 module.exports = JsonParser;
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 module.exports = {
   WORMHOLE: '__wormhole__',
   TOPIC: '__topic__',
@@ -7769,7 +8091,7 @@ module.exports = {
   UUID: '__uuid__'
 };
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 var MessagePoster = function(window, targetOrigin) {
   this.postMessage = function(message) {
     console.log('Posting the following message to ' + targetOrigin + ':');
@@ -7784,7 +8106,7 @@ MessagePoster.create = function(window, targetOrigin) {
 
 module.exports = MessagePoster;
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 
@@ -7811,7 +8133,7 @@ MessageReceiver.create = function(window, origin, callback) {
 
 module.exports = MessageReceiver;
 
-},{"./json_parser.js":17,"eventlistener":12}],21:[function(_dereq_,module,exports){
+},{"./json_parser.js":19,"eventlistener":13}],23:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var PendingMessageQueue = function(wormholeMessageSender, wormholeReadinessChecker) {
@@ -7838,7 +8160,7 @@ var PendingMessageQueue = function(wormholeMessageSender, wormholeReadinessCheck
 
 module.exports = PendingMessageQueue;
 
-},{"lodash":14}],22:[function(_dereq_,module,exports){
+},{"lodash":15}],24:[function(_dereq_,module,exports){
 var UUID = _dereq_('uuid-js');
 
 module.exports = {
@@ -7847,7 +8169,7 @@ module.exports = {
   }
 };
 
-},{"uuid-js":15}],23:[function(_dereq_,module,exports){
+},{"uuid-js":16}],25:[function(_dereq_,module,exports){
 var WormholeMessageSender = _dereq_('./wormhole_message_sender');
 var WormholeMessagePublisher = _dereq_('./wormhole_message_publisher');
 var WormholeMessageReceiver = _dereq_('./wormhole_message_receiver');
@@ -7889,7 +8211,7 @@ Wormhole.create = function(wormholeWindow, url) {
 
 module.exports = Wormhole;
 
-},{"./pending_message_queue":21,"./wormhole_beacon_sender":24,"./wormhole_message_publisher":28,"./wormhole_message_receiver":29,"./wormhole_message_sender":30,"./wormhole_readiness_checker":31,"lite-url":13}],24:[function(_dereq_,module,exports){
+},{"./pending_message_queue":23,"./wormhole_beacon_sender":26,"./wormhole_message_publisher":30,"./wormhole_message_receiver":31,"./wormhole_message_sender":32,"./wormhole_readiness_checker":33,"lite-url":14}],26:[function(_dereq_,module,exports){
 var WormholeBeaconSender = function(wormholeMessageSender, wormholeReadinessChecker, setTimeout) {
   this.start = function() {
     var wormholeReady = false;
@@ -7906,7 +8228,7 @@ var WormholeBeaconSender = function(wormholeMessageSender, wormholeReadinessChec
 
 module.exports = WormholeBeaconSender;
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 var Wormhole = _dereq_('./wormhole');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -7930,7 +8252,7 @@ var WormholeCreator = function(iframeOpener) {
 
 module.exports = new WormholeCreator(iframeOpener);
 
-},{"./iframe_opener":16,"./wormhole":23}],26:[function(_dereq_,module,exports){
+},{"./iframe_opener":18,"./wormhole":25}],28:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('./message_keys');
 
 var WormholeMessageBuilder = function() {
@@ -7947,7 +8269,7 @@ var WormholeMessageBuilder = function() {
 
 module.exports = new WormholeMessageBuilder();
 
-},{"./message_keys":18}],27:[function(_dereq_,module,exports){
+},{"./message_keys":20}],29:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('./message_keys');
 
 var WormholeMessageParser = function() {
@@ -7964,7 +8286,7 @@ var WormholeMessageParser = function() {
 
 module.exports = new WormholeMessageParser();
 
-},{"./message_keys":18}],28:[function(_dereq_,module,exports){
+},{"./message_keys":20}],30:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var uuidGenerator = _dereq_('./uuid_generator');
 
@@ -7986,21 +8308,20 @@ var WormholeMessagePublisher = function(wormholeMessageReceiver, pendingMessageQ
 
 module.exports = WormholeMessagePublisher;
 
-},{"./uuid_generator":22,"es6-promise":2}],29:[function(_dereq_,module,exports){
+},{"./uuid_generator":24,"es6-promise":3}],31:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 var wormholeMessageParser = _dereq_('./wormhole_message_parser');
 var MessageReceiver = _dereq_('./message_receiver');
+var EventEmitter = _dereq_('./event_emitter');
 
 var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender) {
-  var callbacks = {ready: [], response: []};
+  var eventEmitter = EventEmitter.create();
 
   var messageReceiver = new MessageReceiver(window, wormholeOrigin, function(eventData) {
     if (eventData) {
       var wormholeMessage = wormholeMessageParser.parse(eventData);
-      console.log('Received :');
-      console.log(wormholeMessage);
       if (wormholeMessage.type === 'publish') {
         console.log(subscribeCallbacks[wormholeMessage.topic]);
         _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
@@ -8010,17 +8331,17 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribe
           var responseData = callback(wormholeMessage.data, respond);
         });
       } else if (wormholeMessage.type === 'response') {
-        _.each(callbacks['response'], function(callback) { callback(wormholeMessage); });
+        eventEmitter.emit('response');
       } else if (wormholeMessage.type === 'beacon') {
         wormholeMessageSender.sendReady();
       } else if (wormholeMessage.type === 'ready') {
-        _.each(callbacks['ready'], function(callback) { callback(); });
+        eventEmitter.emit('ready');
       }
     }
   });
 
   this.on = function(type, callback) {
-    callbacks[type].push(callback);
+    eventEmitter.on(type, callback);
   };
 
   this.startListening = messageReceiver.startListening;
@@ -8029,7 +8350,7 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribe
 
 module.exports = WormholeMessageReceiver;
 
-},{"./json_parser.js":17,"./message_receiver":20,"./wormhole_message_parser":27,"eventlistener":12,"lodash":14}],30:[function(_dereq_,module,exports){
+},{"./event_emitter":17,"./json_parser.js":19,"./message_receiver":22,"./wormhole_message_parser":29,"eventlistener":13,"lodash":15}],32:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var MessagePoster = _dereq_('./message_poster');
 
@@ -8059,7 +8380,7 @@ var WormholeMessageSender = function(wormholeWindow, origin) {
 
 module.exports = WormholeMessageSender;
 
-},{"./message_poster":19,"./wormhole_message_builder":26}],31:[function(_dereq_,module,exports){
+},{"./message_poster":21,"./wormhole_message_builder":28}],33:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var _ = _dereq_('lodash');
 
@@ -8080,6 +8401,6 @@ var WormholeReadinessChecker = function(wormholeMessageReceiver) {
 
 module.exports = WormholeReadinessChecker;
 
-},{"es6-promise":2,"lodash":14}]},{},[25])
-(25)
+},{"es6-promise":3,"lodash":15}]},{},[27])
+(27)
 });
