@@ -2,6 +2,7 @@ var WormholeMessageSender = require('./wormhole_message_sender');
 var WormholeMessagePublisher = require('./wormhole_message_publisher');
 var WormholeMessageReceiver = require('./wormhole_message_receiver');
 var WormholeBeaconSender = require('./wormhole_beacon_sender');
+var WormholeBeaconResponder = require('./wormhole_beacon_responder');
 var WormholeReadinessChecker = require('./wormhole_readiness_checker');
 var WormholePublishReceiver = require('./wormhole_publish_receiver');
 var PendingMessageQueue = require('./pending_message_queue');
@@ -17,6 +18,7 @@ var Wormhole = function(wormholeWindow, url) {
   var wormholeMessagePublisher = new WormholeMessagePublisher(wormholeMessageReceiver, pendingMessageQueue);
   var wormholeBeaconSender = new WormholeBeaconSender(wormholeMessageSender, wormholeReadinessChecker, setTimeout);
   var wormholePublishReceiver = new WormholePublishReceiver(wormholeMessageReceiver, wormholeMessageSender);
+  var wormholeBeaconResponder = new WormholeBeaconResponder(wormholeMessageReceiver, wormholeMessageSender);
   wormholeBeaconSender.start();
   wormholeMessageReceiver.startListening();
 

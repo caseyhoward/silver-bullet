@@ -9,17 +9,10 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, wormholeM
   var eventEmitter = EventEmitter.create();
 
   var messageReceiver = new MessageReceiver(window, wormholeOrigin, function(eventData) {
+    var wormholeMessage;
     if (eventData) {
-      var wormholeMessage = wormholeMessageParser.parse(eventData);
-      if (wormholeMessage.type === 'publish') {
-        eventEmitter.emit('publish', wormholeMessage);
-      } else if (wormholeMessage.type === 'response') {
-        eventEmitter.emit('response', wormholeMessage);
-      } else if (wormholeMessage.type === 'beacon') {
-        wormholeMessageSender.sendReady();
-      } else if (wormholeMessage.type === 'ready') {
-        eventEmitter.emit('ready');
-      }
+      wormholeMessage = wormholeMessageParser.parse(eventData);
+      eventEmitter.emit(wormholeMessage.type, wormholeMessage);
     }
   });
 
