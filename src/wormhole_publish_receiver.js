@@ -1,22 +1,18 @@
 var _ = require('lodash');
+var EventEmitter = require('./event_emitter');
 
 var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageSender) {
-  var subscribeCallbacks = {};
+  var eventEmitter = new EventEmitter();
 
   wormholeMessageReceiver.on('publish', function(wormholeMessage) {
-    console.log('publish ');
-    console.log(wormholeMessage);
-    _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-      var respond = function(data) {
-        wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
-      }
-      var responseData = callback(wormholeMessage.data, respond);
-    });
+    var respond = function(data) {
+      wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+    };
+    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
   })
 
   this.subscribe = function(topic, callback) {
-    subscribeCallbacks[topic] = subscribeCallbacks[topic] || [];
-    subscribeCallbacks[topic].push(callback);
+    eventEmitter.on(topic, callback);
   };
 };
 

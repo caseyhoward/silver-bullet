@@ -8381,30 +8381,26 @@ module.exports = WormholeMessageSender;
 
 },{"./message_poster":21,"./wormhole_message_builder":29}],34:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
+var EventEmitter = _dereq_('./event_emitter');
 
 var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageSender) {
-  var subscribeCallbacks = {};
+  var eventEmitter = new EventEmitter();
 
   wormholeMessageReceiver.on('publish', function(wormholeMessage) {
-    console.log('publish ');
-    console.log(wormholeMessage);
-    _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-      var respond = function(data) {
-        wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
-      }
-      var responseData = callback(wormholeMessage.data, respond);
-    });
+    var respond = function(data) {
+      wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+    };
+    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
   })
 
   this.subscribe = function(topic, callback) {
-    subscribeCallbacks[topic] = subscribeCallbacks[topic] || [];
-    subscribeCallbacks[topic].push(callback);
+    eventEmitter.on(topic, callback);
   };
 };
 
 module.exports = WormholePublishReceiver;
 
-},{"lodash":15}],35:[function(_dereq_,module,exports){
+},{"./event_emitter":17,"lodash":15}],35:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var _ = _dereq_('lodash');
 
