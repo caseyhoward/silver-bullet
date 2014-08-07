@@ -5,20 +5,14 @@ var wormholeMessageParser = require('./wormhole_message_parser');
 var MessageReceiver = require('./message_receiver');
 var EventEmitter = require('./event_emitter');
 
-var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, subscribeCallbacks, wormholeMessageSender) {
+var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, wormholeMessageSender) {
   var eventEmitter = EventEmitter.create();
 
   var messageReceiver = new MessageReceiver(window, wormholeOrigin, function(eventData) {
     if (eventData) {
       var wormholeMessage = wormholeMessageParser.parse(eventData);
       if (wormholeMessage.type === 'publish') {
-        console.log(subscribeCallbacks[wormholeMessage.topic]);
-        _.each(subscribeCallbacks[wormholeMessage.topic], function(callback) {
-          var respond = function(data) {
-            wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
-          }
-          var responseData = callback(wormholeMessage.data, respond);
-        });
+        eventEmitter.emit('publish', wormholeMessage);
       } else if (wormholeMessage.type === 'response') {
         eventEmitter.emit('response', wormholeMessage);
       } else if (wormholeMessage.type === 'beacon') {
