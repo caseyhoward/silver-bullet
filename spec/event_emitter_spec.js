@@ -7,7 +7,7 @@ describe('EventEmitter', function() {
     eventEmitter = EventEmitter.create();
   });
 
-  it.only('emits events to listeners', function() {
+  it('emits events to listeners', function() {
     var cools = [];
     eventEmitter.on('cool', function() {
       cools.push(1);

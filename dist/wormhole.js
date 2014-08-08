@@ -8405,16 +8405,13 @@ var Promise = _dereq_('es6-promise').Promise;
 var _ = _dereq_('lodash');
 
 var WormholeReadinessChecker = function(wormholeMessageReceiver) {
-  var resolves = [];
-
-  wormholeMessageReceiver.on('ready', function() {
-    _.each(resolves, function(resolve) { resolve(); });
+  var promise = new Promise(function(resolve, reject) {
+    wormholeMessageReceiver.on('ready', function() {
+      resolve();
+    });
   });
 
   this.whenReady = function() {
-    var promise = new Promise(function(resolve, reject) {
-      resolves.push(resolve);
-    });
     return promise;
   };
 };
