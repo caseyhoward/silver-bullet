@@ -8031,13 +8031,18 @@ UUIDjs.newTS = function() {
 module.exports = UUIDjs;
 
 },{}],17:[function(_dereq_,module,exports){
+var _ = _dereq_('lodash');
 var NodeEventEmitter = _dereq_('events').EventEmitter;
+var forward = function(destination, source) {
+  _.each(_.rest(_.rest(arguments)), function(property) {
+    destination[property] = source[property];
+  });
+};
 
 var EventEmitter = function() {
   var eventEmitter = new NodeEventEmitter();
-
-  this.on = eventEmitter.on;
-  this.emit = eventEmitter.emit;
+  forward(this, eventEmitter, 'on', 'emit');
+  this.off = eventEmitter.removeListener;
 };
 
 EventEmitter.create = function() {
@@ -8047,7 +8052,7 @@ EventEmitter.create = function() {
 module.exports = EventEmitter;
 
 
-},{"events":1}],18:[function(_dereq_,module,exports){
+},{"events":1,"lodash":15}],18:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var IframeOpener = function() {
@@ -8216,9 +8221,15 @@ module.exports = Wormhole;
 
 },{"./pending_message_queue":23,"./wormhole_beacon_responder":26,"./wormhole_beacon_sender":27,"./wormhole_message_publisher":31,"./wormhole_message_receiver":32,"./wormhole_message_sender":33,"./wormhole_publish_receiver":34,"./wormhole_readiness_checker":35,"lite-url":14}],26:[function(_dereq_,module,exports){
 var WormholeBeaconResponder = function(wormholeMessageReceiver, wormholeMessageSender) {
-  wormholeMessageReceiver.on('beacon', function() {
+  var beaconReceived = function() {
+    wormholeMessageReceiver.off('beacon', beaconReceived);
     wormholeMessageSender.sendReady();
-  });
+  };
+  wormholeMessageReceiver.on('beacon', beaconReceived);
+};
+
+WormholeBeaconResponder.create = function(wormholeBeaconResponder, WormholeMessageSender) {
+  return new WormholeBeaconResponder(wormholeBeaconResponder, WormholeMessageSender);
 };
 
 module.exports = WormholeBeaconResponder;
@@ -8341,6 +8352,10 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, wormholeM
 
   this.on = function(type, callback) {
     eventEmitter.on(type, callback);
+  };
+
+  this.off = function(type, callback) {
+    eventEmitter.off(type, callback);
   };
 
   this.startListening = messageReceiver.startListening;

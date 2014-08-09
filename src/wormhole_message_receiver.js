@@ -20,6 +20,10 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin, wormholeM
     eventEmitter.on(type, callback);
   };
 
+  this.off = function(type, callback) {
+    eventEmitter.off(type, callback);
+  };
+
   this.startListening = messageReceiver.startListening;
   this.stopListening = messageReceiver.stopListening;
 };

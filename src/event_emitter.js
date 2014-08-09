@@ -1,10 +1,15 @@
+var _ = require('lodash');
 var NodeEventEmitter = require('events').EventEmitter;
+var forward = function(destination, source) {
+  _.each(_.rest(_.rest(arguments)), function(property) {
+    destination[property] = source[property];
+  });
+};
 
 var EventEmitter = function() {
   var eventEmitter = new NodeEventEmitter();
-
-  this.on = eventEmitter.on;
-  this.emit = eventEmitter.emit;
+  forward(this, eventEmitter, 'on', 'emit');
+  this.off = eventEmitter.removeListener;
 };
 
 EventEmitter.create = function() {
