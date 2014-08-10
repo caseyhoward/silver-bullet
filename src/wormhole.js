@@ -22,11 +22,11 @@ var Wormhole = function(wormholeWindow, url) {
   wormholeBeaconSender.start();
   wormholeMessageReceiver.startListening();
 
-  this.subscribe = function(topic, callback) {
+  this.on = function(topic, callback) {
     wormholePublishReceiver.subscribe(topic, callback);
   };
 
-  this.publish = function(topic, data) {
+  this.emit = function(topic, data) {
     return wormholeMessagePublisher.push(topic, data);
   };
 

@@ -10,13 +10,13 @@ describe('wormhole', function() {
 
   it('works without an iframe', function(done) {
     testWormhole = wormhole.opening('http://localhost:8080/spec/integration/assets/html/test.html');
-    var logInPromise = testWormhole.publish('log in').then(function(result) {
+    var logInPromise = testWormhole.emit('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
-    var logInPromise = testWormhole.publish('log in', {username: 'bad'}).catch(function(error) {
+    var logInPromise = testWormhole.emit('log in', {username: 'bad'}).catch(function(error) {
       expect(error).to.equal('bad username');
     });
-    var logOutPromise = testWormhole.publish('log out').then(function(result) {
+    var logOutPromise = testWormhole.emit('log out').then(function(result) {
       expect(result).to.equal('successful log out');
     });
 
@@ -31,10 +31,10 @@ describe('wormhole', function() {
     iframe.src = 'http://localhost:8080/spec/integration/assets/html/test.html';
     document.body.appendChild(iframe);
     testWormhole = wormhole.opening(iframe);
-    var logInPromise = testWormhole.publish('log in').then(function(result) {
+    var logInPromise = testWormhole.emit('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
-    var logOutPromise = testWormhole.publish('log out').then(function(result) {
+    var logOutPromise = testWormhole.emit('log out').then(function(result) {
       expect(result).to.equal('successful log out');
     });
     Promise.all([logInPromise, logOutPromise]).then(function() {

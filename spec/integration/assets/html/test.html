@@ -7,11 +7,11 @@
       setTimeout(function() {
         var testWormhole = wormhole.open('http://localhost:9876');
 
-        testWormhole.subscribe('log in', function(data, respond) {
+        testWormhole.on('log in', function(data, respond) {
           setTimeout(function() { respond('successful log in'); }, 100);
         });
 
-        testWormhole.subscribe('log out', function(data, respond) {
+        testWormhole.on('log out', function(data, respond) {
           respond('successful log out');
         });
       }, 200);

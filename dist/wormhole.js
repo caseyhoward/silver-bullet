@@ -8099,8 +8099,6 @@ module.exports = {
 },{}],21:[function(_dereq_,module,exports){
 var MessagePoster = function(window, targetOrigin) {
   this.postMessage = function(message) {
-    console.log('Posting the following message to ' + targetOrigin + ':');
-    console.log(message);
     window.postMessage(JSON.stringify(message), targetOrigin);
   };
 };
@@ -8199,11 +8197,11 @@ var Wormhole = function(wormholeWindow, url) {
   wormholeBeaconSender.start();
   wormholeMessageReceiver.startListening();
 
-  this.subscribe = function(topic, callback) {
+  this.on = function(topic, callback) {
     wormholePublishReceiver.subscribe(topic, callback);
   };
 
-  this.publish = function(topic, data) {
+  this.emit = function(topic, data) {
     return wormholeMessagePublisher.push(topic, data);
   };
 

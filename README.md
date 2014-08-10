@@ -9,7 +9,7 @@ A modern abstraction of cross domain communication via iframes and postMessage w
 Main page
 ```js
   var testWormhole = wormhole.opening('http://iframed-page.com');
-  testWormhole.publish('hi').then(function(result) {
+  testWormhole.emit('hi').then(function(result) {
     console.log(result);
   });
 ```
