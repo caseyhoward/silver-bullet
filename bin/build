@@ -1,2 +1,1 @@
-./bin/browserify
-karma start
+gulp && ./bin/browserify && karma start

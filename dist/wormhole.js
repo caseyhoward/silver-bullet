@@ -8046,7 +8046,7 @@ var EventEmitter = function() {
 };
 
 EventEmitter.create = function() {
-  return new EventEmitter;
+  return new EventEmitter();
 };
 
 module.exports = EventEmitter;
@@ -8404,7 +8404,7 @@ var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageS
       wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
     };
     eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
-  })
+  });
 
   this.subscribe = function(topic, callback) {
     eventEmitter.on(topic, callback);

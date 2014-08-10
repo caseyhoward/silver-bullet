@@ -11,7 +11,7 @@ describe('wormholeMessageSender', function() {
     message = {a: 1, uuid: 'some uuid'};
     messagePoster = {
       postMessage: function() {}
-    }
+    };
     sandbox.mock(messagePoster).expects('postMessage').withArgs(message);
     sandbox.stub(MessagePoster, 'create').withArgs(wormholeWindow, 'http://origin.host').returns(messagePoster);
     wormholeMessageSender = new WormholeMessageSender(wormholeWindow, 'http://origin.host');

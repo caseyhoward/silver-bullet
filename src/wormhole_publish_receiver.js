@@ -9,7 +9,7 @@ var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageS
       wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
     };
     eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
-  })
+  });
 
   this.subscribe = function(topic, callback) {
     eventEmitter.on(topic, callback);

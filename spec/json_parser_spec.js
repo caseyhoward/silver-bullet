@@ -2,7 +2,7 @@ describe('JsonParser', function() {
   var jsonParser = require('../src/json_parser.js');
 
   it('returns parsed JSON', function() {
-    var json = jsonParser.parse('{"a": [1, "2"]}')
+    var json = jsonParser.parse('{"a": [1, "2"]}');
     expect(json).to.deep.equal({a: [1, '2']});
   });
 

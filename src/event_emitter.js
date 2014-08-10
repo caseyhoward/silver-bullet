@@ -13,7 +13,7 @@ var EventEmitter = function() {
 };
 
 EventEmitter.create = function() {
-  return new EventEmitter;
+  return new EventEmitter();
 };
 
 module.exports = EventEmitter;

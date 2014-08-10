@@ -22,7 +22,7 @@ describe('WormholeBeaconSender', function() {
 
   it('sends a beacon', function() {
     wormholeBeaconSender.start();
-    expect(wormholeMessageSender.sendBeacon.withArgs().called).to.be.true;
+    expect(wormholeMessageSender.sendBeacon.withArgs().called).to.equal(true);
   });
 
   it('sends a beacon every 100ms', function() {

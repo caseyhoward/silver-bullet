@@ -37,7 +37,7 @@ describe('WormholeMessagePublisher', function() {
       expect(data).to.deep.equal([1, 2]);
       done();
     });
-    wormholeMessageReceiver.emit('response', {uuid: 2, data: 'some other topic response'})
-    wormholeMessageReceiver.emit('response', {uuid: 1, data: 'some topic response'})
+    wormholeMessageReceiver.emit('response', {uuid: 2, data: 'some other topic response'});
+    wormholeMessageReceiver.emit('response', {uuid: 1, data: 'some topic response'});
   });
 });

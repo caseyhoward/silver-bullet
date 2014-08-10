@@ -17,7 +17,7 @@ Main page
 Page being iframed
 ```js
   var testWormhole = wormhole.open('http://parent-page.com');
-  testWormhole.subscribe('hi', function(data, respond) {
+  testWormhole.on('hi', function(data, respond) {
     respond('hello there');
   });
 ```
