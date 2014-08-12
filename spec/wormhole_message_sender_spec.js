@@ -28,10 +28,10 @@ describe('wormholeMessageSender', function() {
     });
   });
 
-  describe('#respond', function() {
-    it('responds', function() {
+  describe('#resolve', function() {
+    it('resolves', function() {
       sandbox.stub(wormholeMessageBuilder, 'build').withArgs(sinon.match({type: 'response', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
-      wormholeMessageSender.respond('log in', {abc: 123}, 'some uuid');
+      wormholeMessageSender.resolve('log in', {abc: 123}, 'some uuid');
     });
   });
 

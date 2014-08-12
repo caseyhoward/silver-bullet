@@ -7,7 +7,7 @@ describe('WormholePublishReceiver', function() {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     wormholeMessageReceiver = EventEmitter.create();
-    wormholeMessageSender = {respond: sandbox.spy()};
+    wormholeMessageSender = {resolve: sandbox.spy(), reject: sandbox.spy()};
     wormholePublishReceiver = new WormholePublishReceiver(wormholeMessageReceiver, wormholeMessageSender);
   });
 
@@ -27,10 +27,20 @@ describe('WormholePublishReceiver', function() {
       wormholeMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}});
     });
 
-    it('subscribes to publish events and responds', function(done) {
-      wormholePublishReceiver.subscribe('test', function (data, respond) {
-        respond('response');
-        called = wormholeMessageSender.respond.calledWith('test', 'response', 'some uuid');
+    it('subscribes to publish events and resolves', function(done) {
+      wormholePublishReceiver.subscribe('test', function (data, resolve) {
+        resolve('response');
+        called = wormholeMessageSender.resolve.calledWith('test', 'response', 'some uuid');
+        expect(called).to.equal(true);
+        done();
+      });
+      wormholeMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
+    });
+
+    it('subscribes to publish events and rejects', function(done) {
+      wormholePublishReceiver.subscribe('test', function (data, resolve, reject) {
+        reject('error!!!');
+        called = wormholeMessageSender.reject.calledWith('test', 'error!!!', 'some uuid');
         expect(called).to.equal(true);
         done();
       });

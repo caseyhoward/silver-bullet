@@ -43,4 +43,14 @@ describe('wormhole', function() {
       done();
     });
   });
+
+  it('works with rejection', function(done) {
+    testWormhole = wormhole.opening('http://localhost:8080/spec/integration/assets/html/test.html');
+    var handleError = function(error) {
+      expect(error).to.equal('some error');
+      testWormhole.destroy();
+      done();
+    }
+    testWormhole.emit('blow up').catch(handleError);
+  });
 });

@@ -5,10 +5,13 @@ var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageS
   var eventEmitter = new EventEmitter();
 
   wormholeMessageReceiver.on('publish', function(wormholeMessage) {
-    var respond = function(data) {
-      wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+    var resolve = function(data) {
+      wormholeMessageSender.resolve(wormholeMessage.topic, data, wormholeMessage.uuid);
     };
-    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
+    var reject = function(data) {
+      wormholeMessageSender.reject(wormholeMessage.topic, data, wormholeMessage.uuid);
+    };
+    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, resolve, reject);
   });
 
   this.subscribe = function(topic, callback) {

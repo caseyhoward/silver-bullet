@@ -8313,17 +8313,23 @@ var uuidGenerator = _dereq_('./uuid_generator');
 
 var WormholeMessagePublisher = function(wormholeMessageReceiver, pendingMessageQueue) {
   var publishResolves = {};
+  var publishRejects = {};
 
   this.push = function(topic, data) {
     var uuid = uuidGenerator.generate();
     pendingMessageQueue.push(topic, data, uuid);
     return new Promise(function(resolve, reject) {
       publishResolves[uuid] = resolve;
+      publishRejects[uuid] = reject;
     });
   };
 
   wormholeMessageReceiver.on('response', function(wormholeMessage) {
     publishResolves[wormholeMessage.uuid](wormholeMessage.data);
+  });
+
+  wormholeMessageReceiver.on('rejection', function(wormholeMessage) {
+    publishRejects[wormholeMessage.uuid](wormholeMessage.data);
   });
 };
 
@@ -8373,8 +8379,13 @@ var WormholeMessageSender = function(wormholeWindow, origin) {
     messagePoster.postMessage(message);
   };
 
-  this.respond = function(topic, data, uuid) {
+  this.resolve = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data, uuid: uuid});
+    messagePoster.postMessage(message);
+  };
+
+  this.reject = function(topic, data, uuid) {
+    var message = wormholeMessageBuilder.build({type: 'rejection', topic: topic, data: data, uuid: uuid});
     messagePoster.postMessage(message);
   };
 
@@ -8399,10 +8410,13 @@ var WormholePublishReceiver = function(wormholeMessageReceiver, wormholeMessageS
   var eventEmitter = new EventEmitter();
 
   wormholeMessageReceiver.on('publish', function(wormholeMessage) {
-    var respond = function(data) {
-      wormholeMessageSender.respond(wormholeMessage.topic, data, wormholeMessage.uuid);
+    var resolve = function(data) {
+      wormholeMessageSender.resolve(wormholeMessage.topic, data, wormholeMessage.uuid);
     };
-    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, respond);
+    var reject = function(data) {
+      wormholeMessageSender.reject(wormholeMessage.topic, data, wormholeMessage.uuid);
+    };
+    eventEmitter.emit(wormholeMessage.topic, wormholeMessage.data, resolve, reject);
   });
 
   this.subscribe = function(topic, callback) {

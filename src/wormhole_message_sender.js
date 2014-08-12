@@ -9,8 +9,13 @@ var WormholeMessageSender = function(wormholeWindow, origin) {
     messagePoster.postMessage(message);
   };
 
-  this.respond = function(topic, data, uuid) {
+  this.resolve = function(topic, data, uuid) {
     var message = wormholeMessageBuilder.build({type: 'response', topic: topic, data: data, uuid: uuid});
+    messagePoster.postMessage(message);
+  };
+
+  this.reject = function(topic, data, uuid) {
+    var message = wormholeMessageBuilder.build({type: 'rejection', topic: topic, data: data, uuid: uuid});
     messagePoster.postMessage(message);
   };
 

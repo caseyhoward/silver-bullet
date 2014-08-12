@@ -40,4 +40,21 @@ describe('WormholeMessagePublisher', function() {
     wormholeMessageReceiver.emit('response', {uuid: 2, data: 'some other topic response'});
     wormholeMessageReceiver.emit('response', {uuid: 1, data: 'some topic response'});
   });
+
+  it('returns a promise that gets rejected on a rejection with the correct uuid', function(done) {
+    var promise1 = wormholeMessagePublisher.push('some topic', {abc: 123}).catch(function(response) {
+      expect(response).to.equal('some topic rejection');
+      return 1;
+    });
+    var promise2 = wormholeMessagePublisher.push('some other topic', {def: 456}).catch(function(response) {
+      expect(response).to.equal('some other topic rejection');
+      return 2;
+    });
+    Promise.all([promise1, promise2]).then(function(data) {
+      expect(data).to.deep.equal([1, 2]);
+      done();
+    });
+    wormholeMessageReceiver.emit('rejection', {uuid: 2, data: 'some other topic rejection'});
+    wormholeMessageReceiver.emit('rejection', {uuid: 1, data: 'some topic rejection'});
+  });
 });

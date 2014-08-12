@@ -7,12 +7,17 @@
       setTimeout(function() {
         var testWormhole = wormhole.open('http://localhost:9876');
 
-        testWormhole.on('log in', function(data, respond) {
-          setTimeout(function() { respond('successful log in'); }, 100);
+        testWormhole.on('log in', function(data, resolve, reject) {
+          setTimeout(function() { resolve('successful log in'); }, 100);
         });
 
-        testWormhole.on('log out', function(data, respond) {
-          respond('successful log out');
+        testWormhole.on('log out', function(data, resolve, reject) {
+          resolve('successful log out');
+        });
+
+        testWormhole.on('blow up', function(data, resolve, reject) {
+          console.log(reject);
+          reject('some error');
         });
       }, 200);
     </script>
