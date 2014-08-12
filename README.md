@@ -25,9 +25,14 @@ Page being iframed
 Logs 'hello there'
 
 ## Installation
-TODO
+I haven't added this to npm yet since I will most likely change the name due to another project existing with the same name.
+
+For now, add the following to your package.json:
+'wormhole-js': 'caseyhoward/wormhole-js'
+
+And then require it:
 ```
-  npm install wormhole
+var wormhole = require('wormhole-js');
 ```
 
 ## Development

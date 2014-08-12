@@ -1,6 +1,4 @@
-var _ = require('lodash');
 var eventListener = require('eventlistener');
-var jsonParser = require('./json_parser.js');
 var wormholeMessageParser = require('./wormhole_message_parser');
 var MessageReceiver = require('./message_receiver');
 var EventEmitter = require('./event_emitter');

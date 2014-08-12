@@ -8330,9 +8330,7 @@ var WormholeMessagePublisher = function(wormholeMessageReceiver, pendingMessageQ
 module.exports = WormholeMessagePublisher;
 
 },{"./uuid_generator":24,"es6-promise":3}],32:[function(_dereq_,module,exports){
-var _ = _dereq_('lodash');
 var eventListener = _dereq_('eventlistener');
-var jsonParser = _dereq_('./json_parser.js');
 var wormholeMessageParser = _dereq_('./wormhole_message_parser');
 var MessageReceiver = _dereq_('./message_receiver');
 var EventEmitter = _dereq_('./event_emitter');
@@ -8363,7 +8361,7 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin) {
 
 module.exports = WormholeMessageReceiver;
 
-},{"./event_emitter":17,"./json_parser.js":19,"./message_receiver":22,"./wormhole_message_parser":30,"eventlistener":13,"lodash":15}],33:[function(_dereq_,module,exports){
+},{"./event_emitter":17,"./message_receiver":22,"./wormhole_message_parser":30,"eventlistener":13}],33:[function(_dereq_,module,exports){
 var wormholeMessageBuilder = _dereq_('./wormhole_message_builder');
 var MessagePoster = _dereq_('./message_poster');
 
