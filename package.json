@@ -1,8 +1,8 @@
 {
-  "name": "wormhole-js",
+  "name": "Silver Bullet",
   "version": "0.0.0",
-  "description": "wormhole-js ===========",
-  "main": "dist/wormhole.js",
+  "description": "Like a normal bullet but silver",
+  "main": "dist/silver_bullet.js",
   "dependencies": {},
   "devDependencies": {
     "browserify": "^4.2.3",
@@ -36,11 +36,11 @@
   },
   "scripts": {
     "test": "gulp test",
-    "browserify": "browserify src/wormhole.js --standalone wormhole > dist/wormhole.js"
+    "browserify": "browserify src/silver_bullet.js --standalone silverBullet > dist/silver_bullet.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/caseyhoward/wormhole-js.git"
+    "url": "git://github.com/caseyhoward/silver-bullet.git"
   },
   "keywords": [
     "postmessage",

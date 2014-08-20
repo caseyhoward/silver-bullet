@@ -1,10 +1,10 @@
-var Wormhole = require('./wormhole');
+var SilverBullet = require('./silver_bullet');
 var iframeOpener = require('./iframe_opener');
 
-var WormholeCreator = function(iframeOpener) {
+var SilverBulletCreator = function(iframeOpener) {
   this.open = function(origin) {
     // TODO: Refactor. parent comes out of nowhere.
-    return Wormhole.create(parent, origin);
+    return SilverBullet.create(parent, origin);
   };
 
   this.opening = function(sourceOrIframe) {
@@ -15,8 +15,8 @@ var WormholeCreator = function(iframeOpener) {
       source = sourceOrIframe.src;
       iframe = sourceOrIframe;
     }
-    return Wormhole.create(iframe.contentWindow, source);
+    return SilverBullet.create(iframe.contentWindow, source);
   };
 };
 
-module.exports = new WormholeCreator(iframeOpener);
+module.exports = new SilverBulletCreator(iframeOpener);

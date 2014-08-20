@@ -2,20 +2,20 @@
   <head>
   </head>
   <body>
-    <script src="http://localhost:8080/dist/wormhole.js"></script>
+    <script src="http://localhost:8080/dist/silver_bullet.js"></script>
     <script>
       setTimeout(function() {
-        var testWormhole = wormhole.open('http://localhost:9876');
+        var testSilverBullet = silverBullet.open('http://localhost:9876');
 
-        testWormhole.on('log in', function(data, resolve, reject) {
+        testSilverBullet.on('log in', function(data, resolve, reject) {
           setTimeout(function() { resolve('successful log in'); }, 100);
         });
 
-        testWormhole.on('log out', function(data, resolve, reject) {
+        testSilverBullet.on('log out', function(data, resolve, reject) {
           resolve('successful log out');
         });
 
-        testWormhole.on('blow up', function(data, resolve, reject) {
+        testSilverBullet.on('blow up', function(data, resolve, reject) {
           console.log(reject);
           reject('some error');
         });

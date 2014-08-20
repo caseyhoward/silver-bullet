@@ -1,5 +1,5 @@
 module.exports = {
-  WORMHOLE: '__wormhole__',
+  WORMHOLE: '__silverBullet__',
   TOPIC: '__topic__',
   DATA: '__data__',
   TYPE: '__type__',

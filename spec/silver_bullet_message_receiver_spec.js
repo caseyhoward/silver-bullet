@@ -1,10 +1,10 @@
-var WormholeMessageReceiver = require('../src/wormhole_message_receiver.js');
+var SilverBulletMessageReceiver = require('../src/silver_bullet_message_receiver.js');
 var MessageReceiver = require('../src/message_receiver.js');
-var wormholeMessageParser = require('../src/wormhole_message_parser.js');
+var silverBulletMessageParser = require('../src/silver_bullet_message_parser.js');
 var EventEmitter = require('../src/event_emitter.js');
 
-describe('WormholeMessageReceiver', function() {
-  var sandbox, wormholeMessageReceiver, wormholeMessageSender, messageReceiver, receivedMessage;
+describe('SilverBulletMessageReceiver', function() {
+  var sandbox, silverBulletMessageReceiver, silverBulletMessageSender, messageReceiver, receivedMessage;
 
   beforeEach(function() {
     messageReceiver = {startListening: sinon.spy(), stopListening: sinon.spy()};
@@ -12,11 +12,11 @@ describe('WormholeMessageReceiver', function() {
     // TODO: Find out why the following doesn't work
     // sandbox.stub(MessageReceiver, 'create').withArgs('some window', 'some origin', sinon.match.func).returns(messageReceiver);
     sandbox.stub(MessageReceiver, 'create').returns(messageReceiver);
-    sandbox.stub(wormholeMessageParser, 'parse', function(value) {
+    sandbox.stub(silverBulletMessageParser, 'parse', function(value) {
       value.wasParsed = true;
       return value;
     });
-    wormholeMessageReceiver = new WormholeMessageReceiver('some window', 'some origin');
+    silverBulletMessageReceiver = new SilverBulletMessageReceiver('some window', 'some origin');
     receivedMessage = MessageReceiver.create.getCall(0).args[2];
   });
 
@@ -26,7 +26,7 @@ describe('WormholeMessageReceiver', function() {
 
   describe('#on', function() {
     it('receives parsed messages', function(done) {
-      wormholeMessageReceiver.on('blah', function(data) {
+      silverBulletMessageReceiver.on('blah', function(data) {
         expect(data.data).to.equal('some data');
         expect(data.wasParsed).to.equal(true);
         done();
@@ -36,7 +36,7 @@ describe('WormholeMessageReceiver', function() {
 
     it('does not emit an event if there is no data', function(done) {
       var callback = sinon.spy();
-      wormholeMessageReceiver.on('blah',  callback);
+      silverBulletMessageReceiver.on('blah',  callback);
       receivedMessage();
       setTimeout(function() {
         expect(callback.called).to.equal(false);
@@ -48,8 +48,8 @@ describe('WormholeMessageReceiver', function() {
   describe('#off', function() {
     it('stops receiving messages', function(done) {
       var callback = sinon.spy();
-      wormholeMessageReceiver.on('blah',  callback);
-      wormholeMessageReceiver.off('blah',  callback);
+      silverBulletMessageReceiver.on('blah',  callback);
+      silverBulletMessageReceiver.off('blah',  callback);
       receivedMessage({type: 'blah', data: 'some data'});
       setTimeout(function() {
         expect(callback.called).to.equal(false);
@@ -60,14 +60,14 @@ describe('WormholeMessageReceiver', function() {
 
   describe('#startListening', function() {
     it('starts listening for messages', function() {
-      wormholeMessageReceiver.startListening();
+      silverBulletMessageReceiver.startListening();
       expect(messageReceiver.startListening.called).to.equal(true);
     });
   });
 
   describe('#stopListening', function() {
     it('starts listening for messages', function() {
-      wormholeMessageReceiver.stopListening();
+      silverBulletMessageReceiver.stopListening();
       expect(messageReceiver.stopListening.called).to.equal(true);
     });
   });

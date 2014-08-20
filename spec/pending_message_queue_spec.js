@@ -2,24 +2,24 @@ var PendingMessageQueue = require('../src/pending_message_queue');
 var Promise = require('es6-promise').Promise;
 
 describe('PendingMessageQueue', function() {
-  var pendingMessageQueue, wormholeMessageSender, wormholeReadinessChecker, readinessPromise, readinessPromiseResolve;
+  var pendingMessageQueue, silverBulletMessageSender, silverBulletReadinessChecker, readinessPromise, readinessPromiseResolve;
 
   beforeEach(function() {
     var sandbox = sinon.sandbox.create();
     readinessPromise = new Promise(function(resolve, reject) {
       readinessPromiseResolve = resolve;
     });
-    wormholeMessageSender = {publish: sinon.spy()};
-    wormholeReadinessChecker = {whenReady: function() { return readinessPromise; } };
-    pendingMessageQueue = new PendingMessageQueue(wormholeMessageSender, wormholeReadinessChecker);
+    silverBulletMessageSender = {publish: sinon.spy()};
+    silverBulletReadinessChecker = {whenReady: function() { return readinessPromise; } };
+    pendingMessageQueue = new PendingMessageQueue(silverBulletMessageSender, silverBulletReadinessChecker);
   });
 
   describe('#push', function() {
     it('sends messages when ready', function(done) {
       pendingMessageQueue.push('some topic', 'some data', 'some uuid');
-      expect(wormholeMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(false);
+      expect(silverBulletMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(false);
       readinessPromise.then(function() {
-        expect(wormholeMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(true);
+        expect(silverBulletMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(true);
         done();
       });
       readinessPromiseResolve();
@@ -27,12 +27,12 @@ describe('PendingMessageQueue', function() {
 
     it('sends messages in the same order they were queued', function() {
       pendingMessageQueue.push('some topic', 'some data', 'some uuid');
-      expect(wormholeMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(false);
-      expect(wormholeMessageSender.publish.calledWith('some other topic', 'some other data', 'some other uuid')).to.equal(false);
+      expect(silverBulletMessageSender.publish.calledWith('some topic', 'some data', 'some uuid')).to.equal(false);
+      expect(silverBulletMessageSender.publish.calledWith('some other topic', 'some other data', 'some other uuid')).to.equal(false);
       readinessPromiseResolve();
       readinessPromise.then(function() {
-        expect(wormholeMessageSender.publish.getCall(0).args).to.deep.equal(['some topic', 'some data', 'some uuid']);
-        expect(wormholeMessageSender.publish.getCall(1).args).to.deep.equal(['some other topic', 'some other data', 'some other uuid']);
+        expect(silverBulletMessageSender.publish.getCall(0).args).to.deep.equal(['some topic', 'some data', 'some uuid']);
+        expect(silverBulletMessageSender.publish.getCall(1).args).to.deep.equal(['some other topic', 'some other data', 'some other uuid']);
         done();
       });
     });

@@ -1,21 +1,21 @@
 var _ = require('lodash');
 
-var PendingMessageQueue = function(wormholeMessageSender, wormholeReadinessChecker) {
+var PendingMessageQueue = function(silverBulletMessageSender, silverBulletReadinessChecker) {
   var pendingMessages = [];
-  var wormholeReady = false;
+  var silverBulletReady = false;
 
   var sendPendingMessages = function() {
     _.each(pendingMessages, function(message) {
-      wormholeMessageSender.publish(message.topic, message.data, message.uuid);
+      silverBulletMessageSender.publish(message.topic, message.data, message.uuid);
     });
     pendingMessages = undefined;
   };
 
-  wormholeReadinessChecker.whenReady().then(sendPendingMessages);
+  silverBulletReadinessChecker.whenReady().then(sendPendingMessages);
 
   this.push = function(topic, data, uuid) {
-    if (wormholeReady) {
-      wormholeMessageSender.publish(topic, data, uuid);
+    if (silverBulletReady) {
+      silverBulletMessageSender.publish(topic, data, uuid);
     } else {
       pendingMessages.push({topic: topic, data: data, uuid: uuid});
     }

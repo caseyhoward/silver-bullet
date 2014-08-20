@@ -1,19 +1,19 @@
 var eventListener = require('eventlistener');
-var wormholeMessageParser = require('./wormhole_message_parser');
+var silverBulletMessageParser = require('./silver_bullet_message_parser');
 var MessageReceiver = require('./message_receiver');
 var EventEmitter = require('./event_emitter');
 
-var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin) {
+var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigin) {
   var eventEmitter = EventEmitter.create();
   var receivedMessage = function(eventData) {
-    var wormholeMessage;
+    var silverBulletMessage;
     if (eventData) {
-      wormholeMessage = wormholeMessageParser.parse(eventData);
-      eventEmitter.emit(wormholeMessage.type, wormholeMessage);
+      silverBulletMessage = silverBulletMessageParser.parse(eventData);
+      eventEmitter.emit(silverBulletMessage.type, silverBulletMessage);
     }
   };
 
-  var messageReceiver = MessageReceiver.create(window, wormholeOrigin, receivedMessage);
+  var messageReceiver = MessageReceiver.create(window, silverBulletOrigin, receivedMessage);
 
   this.on = function(type, callback) {
     eventEmitter.on(type, callback);
@@ -27,4 +27,4 @@ var WormholeMessageReceiver = function(wormholeWindow, wormholeOrigin) {
   this.stopListening = messageReceiver.stopListening;
 };
 
-module.exports = WormholeMessageReceiver;
+module.exports = SilverBulletMessageReceiver;

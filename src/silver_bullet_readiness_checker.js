@@ -1,9 +1,9 @@
 var Promise = require('es6-promise').Promise;
 var _ = require('lodash');
 
-var WormholeReadinessChecker = function(wormholeMessageReceiver) {
+var SilverBulletReadinessChecker = function(silverBulletMessageReceiver) {
   var promise = new Promise(function(resolve, reject) {
-    wormholeMessageReceiver.on('ready', function() {
+    silverBulletMessageReceiver.on('ready', function() {
       resolve();
     });
   });
@@ -13,4 +13,4 @@ var WormholeReadinessChecker = function(wormholeMessageReceiver) {
   };
 };
 
-module.exports = WormholeReadinessChecker;
+module.exports = SilverBulletReadinessChecker;

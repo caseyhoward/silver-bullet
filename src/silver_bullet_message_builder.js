@@ -1,6 +1,6 @@
 var messageKeys = require('./message_keys');
 
-var WormholeMessageBuilder = function() {
+var SilverBulletMessageBuilder = function() {
   this.build = function(data) {
     var message = {};
     message[messageKeys.WORMHOLE] = {};
@@ -12,4 +12,4 @@ var WormholeMessageBuilder = function() {
   };
 };
 
-module.exports = new WormholeMessageBuilder();
+module.exports = new SilverBulletMessageBuilder();
