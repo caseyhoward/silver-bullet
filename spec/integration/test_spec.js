@@ -9,7 +9,7 @@ describe('silverBullet', function() {
   });
 
   it('works without an iframe', function(done) {
-    testSilverBullet = silverBullet.opening('http://localhost:8080/spec/integration/assets/html/test.html');
+    testSilverBullet = silverBullet.createIframe('http://localhost:8080/spec/integration/assets/html/test.html');
     var logInPromise = testSilverBullet.emit('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
@@ -30,7 +30,7 @@ describe('silverBullet', function() {
     var iframe = document.createElement('iframe');
     iframe.src = 'http://localhost:8080/spec/integration/assets/html/test.html';
     document.body.appendChild(iframe);
-    testSilverBullet = silverBullet.opening(iframe);
+    testSilverBullet = silverBullet.fromIframe(iframe);
     var logInPromise = testSilverBullet.emit('log in').then(function(result) {
       expect(result).to.equal('successful log in');
     });
@@ -45,7 +45,7 @@ describe('silverBullet', function() {
   });
 
   it('works with rejection', function(done) {
-    testSilverBullet = silverBullet.opening('http://localhost:8080/spec/integration/assets/html/test.html');
+    testSilverBullet = silverBullet.createIframe('http://localhost:8080/spec/integration/assets/html/test.html');
     var handleError = function(error) {
       expect(error).to.equal('some error');
       testSilverBullet.destroy();

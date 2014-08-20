@@ -8,7 +8,7 @@ A modern abstraction of cross domain communication via iframes and postMessage w
 
 Main page
 ```js
-  var testSilverBullet = silverBullet.opening('http://iframed-page.com');
+  var testSilverBullet = silverBullet.createIframe('http://iframed-page.com');
   testSilverBullet.emit('hi').then(function(result) {
     console.log(result);
   });
@@ -16,19 +16,16 @@ Main page
 
 Page being iframed
 ```js
-  var testSilverBullet = silverBullet.open('http://parent-page.com');
-  testSilverBullet.on('hi', function(data, respond) {
+  var testSilverBullet = silverBullet.fromParent('http://parent-page.com');
+  testSilverBullet.on('hi', function(data, resolve, reject) {
     respond('hello there');
   });
 ```
 
 Logs 'hello there'
 
-## Installation
-I haven't added this to npm yet since I will most likely change the name due to another project existing with the same name.
-
 For now, add the following to your package.json:
-npm install --save silverbullet
+npm install --save silver-bullet
 
 And then require it:
 ```

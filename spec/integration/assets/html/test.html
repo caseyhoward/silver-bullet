@@ -5,7 +5,7 @@
     <script src="http://localhost:8080/dist/silver_bullet.js"></script>
     <script>
       setTimeout(function() {
-        var testSilverBullet = silverBullet.open('http://localhost:9876');
+        var testSilverBullet = silverBullet.fromParent('http://localhost:9876');
 
         testSilverBullet.on('log in', function(data, resolve, reject) {
           setTimeout(function() { resolve('successful log in'); }, 100);
@@ -16,7 +16,6 @@
         });
 
         testSilverBullet.on('blow up', function(data, resolve, reject) {
-          console.log(reject);
           reject('some error');
         });
       }, 200);

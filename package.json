@@ -1,7 +1,7 @@
 {
   "name": "silver-bullet",
   "version": "0.0.2",
-  "description": "Like a normal bullet but silver",
+  "description": "A modern library for easy and robust postmessage communication",
   "main": "dist/silver_bullet.js",
   "dependencies": {
     "es6-promise": "^1.0.0",
@@ -46,7 +46,8 @@
   "keywords": [
     "postmessage",
     "promise",
-    "callback"
+    "callback",
+    "eventemitter"
   ],
   "author": "Casey Howard",
   "license": "MIT",

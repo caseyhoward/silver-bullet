@@ -2,20 +2,18 @@ var SilverBullet = require('./silver_bullet');
 var iframeOpener = require('./iframe_opener');
 
 var SilverBulletCreator = function(iframeOpener) {
-  this.open = function(origin) {
-    // TODO: Refactor. parent comes out of nowhere.
+  // TODO: Refactor. parent comes out of nowhere.
+  this.fromParent = function(origin) {
     return SilverBullet.create(parent, origin);
   };
 
-  this.opening = function(sourceOrIframe) {
-    if (typeof sourceOrIframe === 'string') {
-      source = sourceOrIframe;
-      iframe = iframeOpener.open(sourceOrIframe);
-    } else {
-      source = sourceOrIframe.src;
-      iframe = sourceOrIframe;
-    }
+  this.createIframe = function(source) {
+    iframe = iframeOpener.open(source);
     return SilverBullet.create(iframe.contentWindow, source);
+  };
+
+  this.fromIframe = function(iframe) {
+    return SilverBullet.create(iframe.contentWindow, iframe.src);
   };
 };
 
