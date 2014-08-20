@@ -1,6 +1,6 @@
 {
-  "name": "Silver Bullet",
-  "version": "0.0.0",
+  "name": "silver-bullet",
+  "version": "0.0.2",
   "description": "Like a normal bullet but silver",
   "main": "dist/silver_bullet.js",
   "dependencies": {},
