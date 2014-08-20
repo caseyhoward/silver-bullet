@@ -8396,29 +8396,37 @@ module.exports = SilverBulletMessageSender;
 
 },{"./message_poster":21,"./silver_bullet_message_builder":28}],33:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
-var EventEmitter = _dereq_('./event_emitter');
 
 var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessageSender) {
-  var eventEmitter = new EventEmitter();
+  var callbacks = {};
+  var resolves = {};
 
   silverBulletMessageReceiver.on('publish', function(silverBulletMessage) {
-    var resolve = function(data) {
+    resolve = function(data) {
       silverBulletMessageSender.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     var reject = function(data) {
       silverBulletMessageSender.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
-    eventEmitter.emit(silverBulletMessage.topic, silverBulletMessage.data, resolve, reject);
+    try {
+      _.each(callbacks[silverBulletMessage.topic], function(callback) {
+        var returnValue = callback(silverBulletMessage.data, resolve, reject);
+        if (returnValue) { resolve(returnValue); }
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 
   this.subscribe = function(topic, callback) {
-    eventEmitter.on(topic, callback);
+    callbacks[topic] = callbacks[topic] || [];
+    callbacks[topic].push(callback);
   };
 };
 
 module.exports = SilverBulletPublishReceiver;
 
-},{"./event_emitter":17,"lodash":15}],34:[function(_dereq_,module,exports){
+},{"lodash":15}],34:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var _ = _dereq_('lodash');
 

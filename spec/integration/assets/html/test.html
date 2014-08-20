@@ -18,6 +18,14 @@
         testSilverBullet.on('blow up', function(data, resolve, reject) {
           reject('some error');
         });
+
+        testSilverBullet.on('throwError', function(data, resolve, reject) {
+          throw('thrown error');
+        });
+
+        testSilverBullet.on('returnValue', function(data, resolve, reject) {
+          return 'return value';
+        });
       }, 200);
     </script>
   </body>

@@ -1,21 +1,30 @@
 var _ = require('lodash');
-var EventEmitter = require('./event_emitter');
 
 var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessageSender) {
-  var eventEmitter = new EventEmitter();
+  var callbacks = {};
+  var resolves = {};
 
   silverBulletMessageReceiver.on('publish', function(silverBulletMessage) {
-    var resolve = function(data) {
+    // TODO: Ensure we don't resolve/return or reject/throw more than once per topic
+    resolve = function(data) {
       silverBulletMessageSender.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     var reject = function(data) {
       silverBulletMessageSender.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
-    eventEmitter.emit(silverBulletMessage.topic, silverBulletMessage.data, resolve, reject);
+    try {
+      _.each(callbacks[silverBulletMessage.topic], function(callback) {
+        var returnValue = callback(silverBulletMessage.data, resolve, reject);
+        if (returnValue) { resolve(returnValue); }
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 
   this.subscribe = function(topic, callback) {
-    eventEmitter.on(topic, callback);
+    callbacks[topic] = callbacks[topic] || [];
+    callbacks[topic].push(callback);
   };
 };
 

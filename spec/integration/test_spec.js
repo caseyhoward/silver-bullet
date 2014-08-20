@@ -50,7 +50,32 @@ describe('silverBullet', function() {
       expect(error).to.equal('some error');
       testSilverBullet.destroy();
       done();
-    }
+    };
     testSilverBullet.emit('blow up').catch(handleError);
+  });
+
+  it('throws', function(done) {
+    testSilverBullet = silverBullet.createIframe('http://localhost:8080/spec/integration/assets/html/test.html');
+    var handleError = function(error) {
+      expect(error).to.equal('thrown error');
+      testSilverBullet.destroy();
+      done();
+    };
+    testSilverBullet.emit('throwError').catch(handleError);
+  });
+
+  it('returns', function(done) {
+    testSilverBullet = silverBullet.createIframe('http://localhost:8080/spec/integration/assets/html/test.html');
+    var handleError = function(error) {
+      expect(error).to.equal('thrown error');
+      testSilverBullet.destroy();
+      done();
+    };
+    testSilverBullet.emit('returnValue').then(function(value) {
+      expect(value).to.equal('return value');
+      testSilverBullet.destroy();
+      iframe.parentNode.removeChild(iframe);
+      done();
+    });
   });
 });

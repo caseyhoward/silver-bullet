@@ -46,6 +46,24 @@ describe('SilverBulletPublishReceiver', function() {
       });
       silverBulletMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
     });
+
+    it('subscribes to publish events and returns', function() {
+      silverBulletPublishReceiver.subscribe('test', function (data, resolve) {
+        return 'response';
+      });
+      silverBulletMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
+      called = silverBulletMessageSender.resolve.calledWith('test', 'response', 'some uuid');
+      expect(called).to.equal(true);
+    });
+
+    it('subscribes to publish events and throws', function() {
+      silverBulletPublishReceiver.subscribe('test', function (data, resolve, reject) {
+        throw('error!!!');
+      });
+      silverBulletMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
+      called = silverBulletMessageSender.reject.calledWith('test', 'error!!!', 'some uuid');
+      expect(called).to.equal(true);
+    });
   });
 });
 
