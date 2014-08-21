@@ -1,0 +1,26 @@
+{
+  "name": "silver-bullet",
+  "version": "0.0.3",
+  "homepage": "https://github.com/caseyhoward/silver-bullet",
+  "authors": [
+    "Casey Howard <caseyhoward@caseyhoward.com>"
+  ],
+  "main": "dist/silver_bullet.js",
+  "moduleType": [
+    "amd",
+    "es6",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "postmessage"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
