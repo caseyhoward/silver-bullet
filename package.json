@@ -1,6 +1,6 @@
 {
   "name": "silver-bullet",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A modern library for easy and robust postmessage communication",
   "main": "dist/silver_bullet.js",
   "dependencies": {
