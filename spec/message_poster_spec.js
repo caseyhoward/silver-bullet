@@ -5,21 +5,30 @@ describe('MessagePoster', function() {
   describe('postMessage', function() {
     var messagePoster, postMessageEventListener, postMessageEventListenerWithDone;
 
-    beforeEach(function() {
-      messagePoster = MessagePoster.create(window, '*');
-      postMessageEventListener = _.curry(function(done, event) {
-        expect(event.data).to.equal('"event data"');
-        done();
-      });
-    });
-
     afterEach(function() {
-      window.removeEventListener('message', postMessageEventListenerWithDone, false);
+      window.removeEventListener('message', postMessageEventListener, false);
     });
 
     it('posts messages', function(done) {
-      postMessageEventListenerWithDone = postMessageEventListener(done);
-      window.addEventListener('message', postMessageEventListenerWithDone, false);
+      messagePoster = MessagePoster.create(window, '*');
+      postMessageEventListener = function(event) {
+        expect(event.data).to.equal('event data');
+        done();
+      };
+      window.addEventListener('message', postMessageEventListener, false);
+      messagePoster.postMessage('event data');
+    });
+
+    it('posts serialized messages', function(done) {
+      var serialize = function(message) {
+        return JSON.stringify(message);
+      };
+      messagePoster = MessagePoster.create(window, '*', {serialize: serialize});
+      postMessageEventListener = function(event) {
+        expect(event.data).to.equal('"event data"');
+        done();
+      };
+      window.addEventListener('message', postMessageEventListener, false);
       messagePoster.postMessage('event data');
     });
   });

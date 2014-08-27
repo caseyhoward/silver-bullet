@@ -1,4 +1,4 @@
-var silverBulletMessageBuilder = require('../src/silver_bullet_message_builder');
+var serializer = require('../src/silver_bullet/serializer');
 var SilverBulletMessageSender = require('../src/silver_bullet_message_sender');
 var MessagePoster = require('../src/message_poster');
 
@@ -12,8 +12,11 @@ describe('silverBulletMessageSender', function() {
     messagePoster = {
       postMessage: function() {}
     };
-    sandbox.mock(messagePoster).expects('postMessage').withArgs(message);
-    sandbox.stub(MessagePoster, 'create').withArgs(silverBulletWindow, 'http://origin.host').returns(messagePoster);
+    sandbox.stub(MessagePoster, 'create').withArgs(
+      silverBulletWindow,
+      'http://origin.host',
+      sinon.match({serialize: serializer.serialize})
+    ).returns(messagePoster);
     silverBulletMessageSender = new SilverBulletMessageSender(silverBulletWindow, 'http://origin.host');
   });
 
@@ -21,30 +24,34 @@ describe('silverBulletMessageSender', function() {
     sandbox.restore();
   });
 
+  var expectPostMessage = function (message) {
+    sandbox.mock(messagePoster).expects('postMessage').withArgs(message);
+  };
+
   describe('#publish', function() {
     it('publishes', function() {
-      sandbox.stub(silverBulletMessageBuilder, 'build').withArgs(sinon.match({type: 'publish', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
+      expectPostMessage({type: 'publish', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'});
       silverBulletMessageSender.publish('log in', {abc: 123}, 'some uuid');
     });
   });
 
   describe('#resolve', function() {
     it('resolves', function() {
-      sandbox.stub(silverBulletMessageBuilder, 'build').withArgs(sinon.match({type: 'response', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'})).returns(message);
+      expectPostMessage({type: 'response', topic: 'log in', data: {abc: 123}, uuid: 'some uuid'});
       silverBulletMessageSender.resolve('log in', {abc: 123}, 'some uuid');
     });
   });
 
   describe('#sendReady', function() {
     it('sends ready', function() {
-      sandbox.stub(silverBulletMessageBuilder, 'build').withArgs(sinon.match({type: 'ready'})).returns(message);
+      expectPostMessage({type: 'ready'});
       silverBulletMessageSender.sendReady();
     });
   });
 
   describe('#sendBeacon', function() {
     it('sends beacon', function() {
-      sandbox.stub(silverBulletMessageBuilder, 'build').withArgs(sinon.match({type: 'beacon'})).returns(message);
+      expectPostMessage({type: 'beacon'});
       silverBulletMessageSender.sendBeacon();
     });
   });

@@ -1,11 +1,14 @@
-var MessagePoster = function(window, targetOrigin) {
+var MessagePoster = function(window, targetOrigin, options) {
+  options = options || {};
+  var serialize = options.serialize || function identity(message) { return message; };
+
   this.postMessage = function(message) {
-    window.postMessage(JSON.stringify(message), targetOrigin);
+    window.postMessage(serialize(message), targetOrigin);
   };
 };
 
-MessagePoster.create = function(window, targetOrigin) {
-  return new MessagePoster(window, targetOrigin);
+MessagePoster.create = function(window, targetOrigin, options) {
+  return new MessagePoster(window, targetOrigin, options);
 };
 
 module.exports = MessagePoster;
