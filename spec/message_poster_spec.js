@@ -3,10 +3,10 @@ var MessagePoster = require('../src/message_poster.js');
 
 describe('MessagePoster', function() {
   describe('postMessage', function() {
-    var messagePoster, postMessageEventListener, postMessageEventListenerWithDone;
+    var messagePoster, postMessageEventListener;
 
     afterEach(function() {
-      window.removeEventListener('message', postMessageEventListener, false);
+      window.removeEventListener('message', postMessageEventListener);
     });
 
     it('posts messages', function(done) {

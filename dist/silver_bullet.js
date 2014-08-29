@@ -8116,11 +8116,13 @@ module.exports = MessagePoster;
 var eventListener = _dereq_('eventlistener');
 var jsonParser = _dereq_('./json_parser.js');
 
-var MessageReceiver = function(window, origin, callback) {
+var MessageReceiver = function(window, origin, callback, options) {
+  options = options || {};
+  deserialize = options.deserialize || function identity(x) { return x; };
+
   var handleMessage = function(event) {
     if (event.origin === origin) {
-      var eventData = jsonParser.parse(event.data);
-      callback(eventData);
+      callback(deserialize(event.data));
     }
   };
 
@@ -8133,8 +8135,8 @@ var MessageReceiver = function(window, origin, callback) {
   };
 };
 
-MessageReceiver.create = function(window, origin, callback) {
-  return new MessageReceiver(window, origin, callback);
+MessageReceiver.create = function(window, origin, callback, options) {
+  return new MessageReceiver(window, origin, callback, options);
 };
 
 module.exports = MessageReceiver;
@@ -8211,7 +8213,25 @@ SilverBullet.create = function(silverBulletWindow, url) {
 
 module.exports = SilverBullet;
 
-},{"./pending_message_queue":23,"./silver_bullet_beacon_responder":26,"./silver_bullet_beacon_sender":27,"./silver_bullet_message_publisher":30,"./silver_bullet_message_receiver":31,"./silver_bullet_message_sender":32,"./silver_bullet_publish_receiver":33,"./silver_bullet_readiness_checker":34,"lite-url":14}],25:[function(_dereq_,module,exports){
+},{"./pending_message_queue":23,"./silver_bullet_beacon_responder":27,"./silver_bullet_beacon_sender":28,"./silver_bullet_message_publisher":30,"./silver_bullet_message_receiver":31,"./silver_bullet_message_sender":32,"./silver_bullet_publish_receiver":33,"./silver_bullet_readiness_checker":34,"lite-url":14}],25:[function(_dereq_,module,exports){
+var messageKeys = _dereq_('../message_keys');
+var jsonParser = _dereq_('../json_parser.js');
+
+var Deserializer = function() {
+  this.deserialize = function(message) {
+    var data = {};
+    var silverBulletData = jsonParser.parse(message)[messageKeys.WORMHOLE];
+    data.type = silverBulletData[messageKeys.TYPE];
+    data.topic = silverBulletData[messageKeys.TOPIC];
+    data.data = silverBulletData[messageKeys.DATA];
+    data.uuid = silverBulletData[messageKeys.UUID];
+    return data;
+  };
+};
+
+module.exports = new Deserializer();
+
+},{"../json_parser.js":19,"../message_keys":20}],26:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('../message_keys');
 
 var Serializer = function() {
@@ -8228,7 +8248,7 @@ var Serializer = function() {
 
 module.exports = new Serializer();
 
-},{"../message_keys":20}],26:[function(_dereq_,module,exports){
+},{"../message_keys":20}],27:[function(_dereq_,module,exports){
 var SilverBulletBeaconResponder = function(silverBulletMessageReceiver, silverBulletMessageSender) {
   var beaconReceived = function() {
     silverBulletMessageReceiver.off('beacon', beaconReceived);
@@ -8243,7 +8263,7 @@ SilverBulletBeaconResponder.create = function(silverBulletBeaconResponder, Silve
 
 module.exports = SilverBulletBeaconResponder;
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 var SilverBulletBeaconSender = function(silverBulletMessageSender, silverBulletReadinessChecker, setTimeout) {
   this.start = function() {
     var silverBulletReady = false;
@@ -8260,7 +8280,7 @@ var SilverBulletBeaconSender = function(silverBulletMessageSender, silverBulletR
 
 module.exports = SilverBulletBeaconSender;
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 var SilverBullet = _dereq_('./silver_bullet');
 var iframeOpener = _dereq_('./iframe_opener');
 
@@ -8282,24 +8302,7 @@ var SilverBulletCreator = function(iframeOpener) {
 
 module.exports = new SilverBulletCreator(iframeOpener);
 
-},{"./iframe_opener":18,"./silver_bullet":24}],29:[function(_dereq_,module,exports){
-var messageKeys = _dereq_('./message_keys');
-
-var SilverBulletMessageParser = function() {
-  this.parse = function(message) {
-    var data = {};
-    var silverBulletData = message[messageKeys.WORMHOLE];
-    data.type = silverBulletData[messageKeys.TYPE];
-    data.topic = silverBulletData[messageKeys.TOPIC];
-    data.data = silverBulletData[messageKeys.DATA];
-    data.uuid = silverBulletData[messageKeys.UUID];
-    return data;
-  };
-};
-
-module.exports = new SilverBulletMessageParser();
-
-},{"./message_keys":20}],30:[function(_dereq_,module,exports){
+},{"./iframe_opener":18,"./silver_bullet":24}],30:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 var uuidGenerator = _dereq_('./uuid_generator');
 var _ = _dereq_('lodash');
@@ -8332,21 +8335,19 @@ module.exports = SilverBulletMessagePublisher;
 
 },{"./uuid_generator":35,"es6-promise":3,"lodash":15}],31:[function(_dereq_,module,exports){
 var eventListener = _dereq_('eventlistener');
-var silverBulletMessageParser = _dereq_('./silver_bullet_message_parser');
+var deserializer = _dereq_('./silver_bullet/deserializer');
 var MessageReceiver = _dereq_('./message_receiver');
 var EventEmitter = _dereq_('./event_emitter');
 
 var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigin) {
   var eventEmitter = EventEmitter.create();
-  var receivedMessage = function(eventData) {
-    var silverBulletMessage;
-    if (eventData) {
-      silverBulletMessage = silverBulletMessageParser.parse(eventData);
-      eventEmitter.emit(silverBulletMessage.type, silverBulletMessage);
+  var receivedMessage = function(message) {
+    if (message) {
+      eventEmitter.emit(message.type, message);
     }
   };
 
-  var messageReceiver = MessageReceiver.create(window, silverBulletOrigin, receivedMessage);
+  var messageReceiver = MessageReceiver.create(window, silverBulletOrigin, receivedMessage, {deserialize: deserializer.deserialize});
 
   this.on = function(type, callback) {
     eventEmitter.on(type, callback);
@@ -8362,7 +8363,7 @@ var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigi
 
 module.exports = SilverBulletMessageReceiver;
 
-},{"./event_emitter":17,"./message_receiver":22,"./silver_bullet_message_parser":29,"eventlistener":13}],32:[function(_dereq_,module,exports){
+},{"./event_emitter":17,"./message_receiver":22,"./silver_bullet/deserializer":25,"eventlistener":13}],32:[function(_dereq_,module,exports){
 var serializer = _dereq_('./silver_bullet/serializer');
 var MessagePoster = _dereq_('./message_poster');
 
@@ -8392,7 +8393,7 @@ var SilverBulletMessageSender = function(silverBulletWindow, origin) {
 
 module.exports = SilverBulletMessageSender;
 
-},{"./message_poster":21,"./silver_bullet/serializer":25}],33:[function(_dereq_,module,exports){
+},{"./message_poster":21,"./silver_bullet/serializer":26}],33:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
 var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessageSender) {
@@ -8452,6 +8453,6 @@ module.exports = {
   }
 };
 
-},{"uuid-js":16}]},{},[28])
-(28)
+},{"uuid-js":16}]},{},[29])
+(29)
 });

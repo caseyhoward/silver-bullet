@@ -1,11 +1,13 @@
 var eventListener = require('eventlistener');
 var jsonParser = require('./json_parser.js');
 
-var MessageReceiver = function(window, origin, callback) {
+var MessageReceiver = function(window, origin, callback, options) {
+  options = options || {};
+  deserialize = options.deserialize || function identity(x) { return x; };
+
   var handleMessage = function(event) {
     if (event.origin === origin) {
-      var eventData = jsonParser.parse(event.data);
-      callback(eventData);
+      callback(deserialize(event.data));
     }
   };
 
@@ -18,8 +20,8 @@ var MessageReceiver = function(window, origin, callback) {
   };
 };
 
-MessageReceiver.create = function(window, origin, callback) {
-  return new MessageReceiver(window, origin, callback);
+MessageReceiver.create = function(window, origin, callback, options) {
+  return new MessageReceiver(window, origin, callback, options);
 };
 
 module.exports = MessageReceiver;

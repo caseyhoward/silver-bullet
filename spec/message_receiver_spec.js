@@ -2,20 +2,32 @@ var MessageReceiver = require('../src/message_receiver');
 var eventListener = require('eventlistener');
 
 describe('MessageReceiver', function() {
-  var callback;
+  var messageReceiver, callback;
+  var origin = 'http://localhost:9876';
 
   afterEach(function() {
-    eventListener.remove(window, 'message', callback);
+    messageReceiver.stopListening();
   });
 
   describe('#startListening', function() {
     it('listens to messages from the same origin', function(done) {
-      var origin = 'http://localhost:9876';
-      var callback = function(data) {
+      callback = function(data) {
+        expect(data).to.equal('{"abc": 123}');
+        done();
+      };
+      messageReceiver = MessageReceiver.create(window, origin, callback);
+      messageReceiver.startListening();
+      window.postMessage('{"abc": 123}', origin);
+    });
+
+    it('listens to messages from the same origin and uses the deserializer', function(done) {
+      callback = function(data) {
         expect(data).to.deep.equal({abc: 123});
         done();
       };
-      var messageReceiver = new MessageReceiver(window, origin, callback);
+      messageReceiver = MessageReceiver.create(window, origin, callback, {deserialize: function(data) {
+        return JSON.parse(data);
+      }});
       messageReceiver.startListening();
       window.postMessage('{"abc": 123}', origin);
     });
@@ -23,9 +35,8 @@ describe('MessageReceiver', function() {
 
   describe('#stopListening', function() {
     it('stops listening', function(done) {
-      var origin = 'http://localhost:9876';
-      var callback = sinon.spy();
-      var messageReceiver = new MessageReceiver(window, origin, callback);
+      callback = sinon.spy();
+      messageReceiver = new MessageReceiver(window, origin, callback);
       messageReceiver.startListening();
       messageReceiver.stopListening();
       window.postMessage('{"abc": 123}', origin);

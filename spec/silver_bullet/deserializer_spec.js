@@ -1,16 +1,16 @@
-var silverBulletMessageParser = require('../src/silver_bullet_message_parser');
+var deserializer = require('../../src/silver_bullet/deserializer');
 
-describe('silverBulletMessageParser', function() {
-  it('parses silverBullet messages', function() {
-    var message = {
+describe('deserializer', function() {
+  it('deserializes silverBullet messages', function() {
+    var message = JSON.stringify({
       '__silverBullet__': {
         '__type__': 'publish',
         '__topic__': 'cool',
         '__data__': { abc: 123 },
         '__uuid__': 'some uuid'
       }
-    };
-    expect(silverBulletMessageParser.parse(message)).to.deep.equal({
+    });
+    expect(deserializer.deserialize(message)).to.deep.equal({
       type: 'publish',
       topic: 'cool',
       data: { abc: 123 },

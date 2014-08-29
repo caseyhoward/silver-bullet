@@ -20,7 +20,7 @@ describe('silverBullet', function() {
       expect(result).to.equal('successful log out');
     });
 
-    Promise.all([logInPromise, logOutPromise]).then(function() {
+    Promise.all([logInPromise, logOutPromise]).then(function(data) {
       testSilverBullet.destroy();
       done();
     });

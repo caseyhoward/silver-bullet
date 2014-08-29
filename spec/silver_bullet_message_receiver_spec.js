@@ -1,6 +1,6 @@
 var SilverBulletMessageReceiver = require('../src/silver_bullet_message_receiver.js');
 var MessageReceiver = require('../src/message_receiver.js');
-var silverBulletMessageParser = require('../src/silver_bullet_message_parser.js');
+var deserializer = require('../src/silver_bullet/deserializer.js');
 var EventEmitter = require('../src/event_emitter.js');
 
 describe('SilverBulletMessageReceiver', function() {
@@ -12,10 +12,6 @@ describe('SilverBulletMessageReceiver', function() {
     // TODO: Find out why the following doesn't work
     // sandbox.stub(MessageReceiver, 'create').withArgs('some window', 'some origin', sinon.match.func).returns(messageReceiver);
     sandbox.stub(MessageReceiver, 'create').returns(messageReceiver);
-    sandbox.stub(silverBulletMessageParser, 'parse', function(value) {
-      value.wasParsed = true;
-      return value;
-    });
     silverBulletMessageReceiver = new SilverBulletMessageReceiver('some window', 'some origin');
     receivedMessage = MessageReceiver.create.getCall(0).args[2];
   });
@@ -28,7 +24,6 @@ describe('SilverBulletMessageReceiver', function() {
     it('receives parsed messages', function(done) {
       silverBulletMessageReceiver.on('blah', function(data) {
         expect(data.data).to.equal('some data');
-        expect(data.wasParsed).to.equal(true);
         done();
       });
       receivedMessage({type: 'blah', data: 'some data'});
