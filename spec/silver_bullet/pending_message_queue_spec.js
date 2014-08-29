@@ -1,4 +1,4 @@
-var PendingMessageQueue = require('../src/pending_message_queue');
+var PendingMessageQueue = require('../../src/silver_bullet/pending_message_queue');
 var Promise = require('es6-promise').Promise;
 
 describe('PendingMessageQueue', function() {

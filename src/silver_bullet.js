@@ -1,17 +1,17 @@
-var SilverBulletMessageSender = require('./silver_bullet_message_sender');
+var SilverBulletMessagePoster = require('./silver_bullet/message_poster');
 var SilverBulletMessagePublisher = require('./silver_bullet_message_publisher');
 var SilverBulletMessageReceiver = require('./silver_bullet_message_receiver');
 var SilverBulletBeaconSender = require('./silver_bullet_beacon_sender');
 var SilverBulletBeaconResponder = require('./silver_bullet_beacon_responder');
 var SilverBulletReadinessChecker = require('./silver_bullet_readiness_checker');
 var SilverBulletPublishReceiver = require('./silver_bullet_publish_receiver');
-var PendingMessageQueue = require('./pending_message_queue');
+var PendingMessageQueue = require('./silver_bullet/pending_message_queue');
 var liteUrl = require('lite-url');
 
 var SilverBullet = function(silverBulletWindow, url) {
   var silverBulletOrigin = liteUrl(url).origin;
   var self = this;
-  var silverBulletMessageSender = new SilverBulletMessageSender(silverBulletWindow, silverBulletOrigin);
+  var silverBulletMessageSender = new SilverBulletMessagePoster(silverBulletWindow, silverBulletOrigin);
   var silverBulletMessageReceiver = new SilverBulletMessageReceiver(silverBulletWindow, silverBulletOrigin, silverBulletMessageSender);
   var silverBulletReadinessChecker = new SilverBulletReadinessChecker(silverBulletMessageReceiver);
   var pendingMessageQueue = new PendingMessageQueue(silverBulletMessageSender, silverBulletReadinessChecker);

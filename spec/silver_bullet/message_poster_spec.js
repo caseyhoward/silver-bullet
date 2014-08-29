@@ -1,6 +1,6 @@
-var serializer = require('../src/silver_bullet/serializer');
-var SilverBulletMessageSender = require('../src/silver_bullet_message_sender');
-var MessagePoster = require('../src/message_poster');
+var serializer = require('../../src/silver_bullet/serializer');
+var SilverBulletMessagePoster = require('../../src/silver_bullet/message_poster');
+var MessagePoster = require('../../src/message_poster');
 
 describe('silverBulletMessageSender', function() {
   var silverBulletMessageSender, sandbox, message, silverBulletWindow, messagePoster;
@@ -17,7 +17,7 @@ describe('silverBulletMessageSender', function() {
       'http://origin.host',
       sinon.match({serialize: serializer.serialize})
     ).returns(messagePoster);
-    silverBulletMessageSender = new SilverBulletMessageSender(silverBulletWindow, 'http://origin.host');
+    silverBulletMessageSender = new SilverBulletMessagePoster(silverBulletWindow, 'http://origin.host');
   });
 
   afterEach(function() {

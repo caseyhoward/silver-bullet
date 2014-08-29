@@ -1,14 +1,15 @@
-var SilverBullet = require('./silver_bullet');
-var iframeOpener = require('./iframe_opener');
+var SilverBullet = require('./../silver_bullet');
+var iframeOpener = require('./../iframe_opener');
 
-var SilverBulletCreator = function(iframeOpener) {
+var Factory = function(iframeOpener) {
+  'use strict';
   // TODO: Refactor. parent comes out of nowhere.
   this.fromParent = function(origin) {
     return SilverBullet.create(parent, origin);
   };
 
   this.createIframe = function(source) {
-    iframe = iframeOpener.open(source);
+    var iframe = iframeOpener.open(source);
     return SilverBullet.create(iframe.contentWindow, source);
   };
 
@@ -17,4 +18,4 @@ var SilverBulletCreator = function(iframeOpener) {
   };
 };
 
-module.exports = new SilverBulletCreator(iframeOpener);
+module.exports = new Factory(iframeOpener);

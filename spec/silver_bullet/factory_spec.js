@@ -1,8 +1,8 @@
-var silverBullet = require('../src/silver_bullet_creator.js');
-var SilverBullet = require('../src/silver_bullet.js');
-var iframeOpener = require('../src/iframe_opener');
+var silverBullet = require('../../src/silver_bullet/factory.js');
+var SilverBullet = require('../../src/silver_bullet.js');
+var iframeOpener = require('../../src/iframe_opener');
 
-describe('SilverBulletCreator', function() {
+describe('Factory', function() {
   var testSilverBullet, iframe, sandbox;
 
   beforeEach(function() {

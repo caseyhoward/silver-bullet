@@ -1,1 +1,1 @@
-browserify src/silver_bullet_creator.js --standalone silverBullet > dist/silver_bullet.js
+browserify src/silver_bullet/factory.js --standalone silverBullet > dist/silver_bullet.js
