@@ -1,8 +1,8 @@
 var serializer = require('./serializer');
 var MessagePoster = require('./../message_poster');
 
-var SilverBulletMessagePoster = function(silverBulletWindow, origin) {
-  var messagePoster = MessagePoster.create(silverBulletWindow, origin, {serialize: serializer.serialize});
+var SilverBulletMessagePoster = function(window, origin) {
+  var messagePoster = MessagePoster.create(window, origin, {serialize: serializer.serialize});
 
   this.publish = function(topic, data, uuid) {
     messagePoster.postMessage({type: 'publish', topic: topic, data: data, uuid: uuid});
@@ -23,6 +23,10 @@ var SilverBulletMessagePoster = function(silverBulletWindow, origin) {
   this.sendBeacon = function() {
     messagePoster.postMessage({type: 'beacon'});
   };
+};
+
+SilverBulletMessagePoster.create = function(window, origin) {
+  return new SilverBulletMessagePoster(window, origin);
 };
 
 module.exports = SilverBulletMessagePoster;

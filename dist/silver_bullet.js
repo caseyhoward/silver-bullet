@@ -8142,27 +8142,20 @@ MessageReceiver.create = function(window, origin, callback, options) {
 module.exports = MessageReceiver;
 
 },{"./json_parser.js":19,"eventlistener":13}],23:[function(_dereq_,module,exports){
-var SilverBulletMessagePoster = _dereq_('./silver_bullet/message_poster');
 var SilverBulletMessagePublisher = _dereq_('./silver_bullet_message_publisher');
-var SilverBulletMessageReceiver = _dereq_('./silver_bullet_message_receiver');
 var SilverBulletBeaconSender = _dereq_('./silver_bullet_beacon_sender');
 var SilverBulletBeaconResponder = _dereq_('./silver_bullet_beacon_responder');
 var SilverBulletReadinessChecker = _dereq_('./silver_bullet_readiness_checker');
 var SilverBulletPublishReceiver = _dereq_('./silver_bullet_publish_receiver');
 var PendingMessageQueue = _dereq_('./silver_bullet/pending_message_queue');
-var liteUrl = _dereq_('lite-url');
 
-var SilverBullet = function(silverBulletWindow, url) {
-  var silverBulletOrigin = liteUrl(url).origin;
-  var self = this;
-  var silverBulletMessageSender = new SilverBulletMessagePoster(silverBulletWindow, silverBulletOrigin);
-  var silverBulletMessageReceiver = new SilverBulletMessageReceiver(silverBulletWindow, silverBulletOrigin, silverBulletMessageSender);
+var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
   var silverBulletReadinessChecker = new SilverBulletReadinessChecker(silverBulletMessageReceiver);
-  var pendingMessageQueue = new PendingMessageQueue(silverBulletMessageSender, silverBulletReadinessChecker);
+  var pendingMessageQueue = new PendingMessageQueue(silverBulletMessagePoster, silverBulletReadinessChecker);
   var silverBulletMessagePublisher = new SilverBulletMessagePublisher(silverBulletMessageReceiver, pendingMessageQueue);
-  var silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessageSender, silverBulletReadinessChecker, setTimeout);
-  var silverBulletPublishReceiver = new SilverBulletPublishReceiver(silverBulletMessageReceiver, silverBulletMessageSender);
-  var silverBulletBeaconResponder = new SilverBulletBeaconResponder(silverBulletMessageReceiver, silverBulletMessageSender);
+  var silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout);
+  var silverBulletPublishReceiver = new SilverBulletPublishReceiver(silverBulletMessageReceiver, silverBulletMessagePoster);
+  new SilverBulletBeaconResponder(silverBulletMessageReceiver, silverBulletMessagePoster);
   silverBulletBeaconSender.start();
   silverBulletMessageReceiver.startListening();
 
@@ -8180,13 +8173,13 @@ var SilverBullet = function(silverBulletWindow, url) {
   };
 };
 
-SilverBullet.create = function(silverBulletWindow, url) {
-  return new SilverBullet(silverBulletWindow, url);
+SilverBullet.create = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
+  return new SilverBullet(silverBulletMessagePoster, silverBulletMessageReceiver);
 };
 
 module.exports = SilverBullet;
 
-},{"./silver_bullet/message_poster":26,"./silver_bullet/pending_message_queue":27,"./silver_bullet_beacon_responder":29,"./silver_bullet_beacon_sender":30,"./silver_bullet_message_publisher":31,"./silver_bullet_message_receiver":32,"./silver_bullet_publish_receiver":33,"./silver_bullet_readiness_checker":34,"lite-url":14}],24:[function(_dereq_,module,exports){
+},{"./silver_bullet/pending_message_queue":27,"./silver_bullet_beacon_responder":29,"./silver_bullet_beacon_sender":30,"./silver_bullet_message_publisher":31,"./silver_bullet_publish_receiver":33,"./silver_bullet_readiness_checker":34}],24:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('../message_keys');
 var jsonParser = _dereq_('../json_parser.js');
 
@@ -8205,34 +8198,46 @@ var Deserializer = function() {
 module.exports = new Deserializer();
 
 },{"../json_parser.js":19,"../message_keys":20}],25:[function(_dereq_,module,exports){
-var SilverBullet = _dereq_('./../silver_bullet');
-var iframeOpener = _dereq_('./../iframe_opener');
+var SilverBullet = _dereq_('../silver_bullet');
+var iframeOpener = _dereq_('../iframe_opener');
+var SilverBulletMessagePoster = _dereq_('../silver_bullet/message_poster');
+var SilverBulletMessageReceiver = _dereq_('../silver_bullet_message_receiver');
+var liteUrl = _dereq_('lite-url');
 
 var Factory = function(iframeOpener) {
   'use strict';
+
+  var create = function(targetWindow, url) {
+    var origin = liteUrl(url).origin;
+    var silverBulletMessagePoster = SilverBulletMessagePoster.create(targetWindow, origin);
+    // TODO: Refactor. window comes out of nowhere.
+    var silverBulletMessageReceiver = SilverBulletMessageReceiver.create(window, origin);
+    return SilverBullet.create(silverBulletMessagePoster, silverBulletMessageReceiver);
+  }
+
   // TODO: Refactor. parent comes out of nowhere.
   this.fromParent = function(origin) {
-    return SilverBullet.create(parent, origin);
+    return create(parent, origin);
   };
 
   this.createIframe = function(source) {
     var iframe = iframeOpener.open(source);
-    return SilverBullet.create(iframe.contentWindow, source);
+    return create(iframe.contentWindow, source);
   };
 
   this.fromIframe = function(iframe) {
-    return SilverBullet.create(iframe.contentWindow, iframe.src);
+    return create(iframe.contentWindow, iframe.src);
   };
 };
 
 module.exports = new Factory(iframeOpener);
 
-},{"./../iframe_opener":18,"./../silver_bullet":23}],26:[function(_dereq_,module,exports){
+},{"../iframe_opener":18,"../silver_bullet":23,"../silver_bullet/message_poster":26,"../silver_bullet_message_receiver":32,"lite-url":14}],26:[function(_dereq_,module,exports){
 var serializer = _dereq_('./serializer');
 var MessagePoster = _dereq_('./../message_poster');
 
-var SilverBulletMessagePoster = function(silverBulletWindow, origin) {
-  var messagePoster = MessagePoster.create(silverBulletWindow, origin, {serialize: serializer.serialize});
+var SilverBulletMessagePoster = function(window, origin) {
+  var messagePoster = MessagePoster.create(window, origin, {serialize: serializer.serialize});
 
   this.publish = function(topic, data, uuid) {
     messagePoster.postMessage({type: 'publish', topic: topic, data: data, uuid: uuid});
@@ -8255,18 +8260,23 @@ var SilverBulletMessagePoster = function(silverBulletWindow, origin) {
   };
 };
 
+SilverBulletMessagePoster.create = function(window, origin) {
+  return new SilverBulletMessagePoster(window, origin);
+};
+
 module.exports = SilverBulletMessagePoster;
 
 },{"./../message_poster":21,"./serializer":28}],27:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
-var PendingMessageQueue = function(silverBulletMessageSender, silverBulletReadinessChecker) {
+var PendingMessageQueue = function(silverBulletMessagePoster, silverBulletReadinessChecker) {
   var pendingMessages = [];
   var silverBulletReady = false;
 
   var sendPendingMessages = function() {
+    // TODO: Send asynchronously. Empty items while iterating.
     _.each(pendingMessages, function(message) {
-      silverBulletMessageSender.publish(message.topic, message.data, message.uuid);
+      silverBulletMessagePoster.publish(message.topic, message.data, message.uuid);
     });
     pendingMessages = undefined;
   };
@@ -8275,7 +8285,7 @@ var PendingMessageQueue = function(silverBulletMessageSender, silverBulletReadin
 
   this.push = function(topic, data, uuid) {
     if (silverBulletReady) {
-      silverBulletMessageSender.publish(topic, data, uuid);
+      silverBulletMessagePoster.publish(topic, data, uuid);
     } else {
       pendingMessages.push({topic: topic, data: data, uuid: uuid});
     }
@@ -8302,27 +8312,27 @@ var Serializer = function() {
 module.exports = new Serializer();
 
 },{"../message_keys":20}],29:[function(_dereq_,module,exports){
-var SilverBulletBeaconResponder = function(silverBulletMessageReceiver, silverBulletMessageSender) {
+var SilverBulletBeaconResponder = function(silverBulletMessageReceiver, silverBulletMessagePoster) {
   var beaconReceived = function() {
     silverBulletMessageReceiver.off('beacon', beaconReceived);
-    silverBulletMessageSender.sendReady();
+    silverBulletMessagePoster.sendReady();
   };
   silverBulletMessageReceiver.on('beacon', beaconReceived);
 };
 
-SilverBulletBeaconResponder.create = function(silverBulletBeaconResponder, SilverBulletMessageSender) {
-  return new SilverBulletBeaconResponder(silverBulletBeaconResponder, SilverBulletMessageSender);
+SilverBulletBeaconResponder.create = function(silverBulletBeaconResponder, silverBulletMessagePoster) {
+  return new SilverBulletBeaconResponder(silverBulletBeaconResponder, silverBulletMessagePoster);
 };
 
 module.exports = SilverBulletBeaconResponder;
 
 },{}],30:[function(_dereq_,module,exports){
-var SilverBulletBeaconSender = function(silverBulletMessageSender, silverBulletReadinessChecker, setTimeout) {
+var SilverBulletBeaconSender = function(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout) {
   this.start = function() {
     var silverBulletReady = false;
     var sendBeaconsUntilReady = function() {
       if (!silverBulletReady) {
-        silverBulletMessageSender.sendBeacon();
+        silverBulletMessagePoster.sendBeacon();
         setTimeout(sendBeaconsUntilReady, 100);
       }
     };
@@ -8370,7 +8380,7 @@ var deserializer = _dereq_('./silver_bullet/deserializer');
 var MessageReceiver = _dereq_('./message_receiver');
 var EventEmitter = _dereq_('./event_emitter');
 
-var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigin) {
+var SilverBulletMessageReceiver = function(window, origin) {
   var eventEmitter = EventEmitter.create();
   var receivedMessage = function(message) {
     if (message) {
@@ -8378,7 +8388,7 @@ var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigi
     }
   };
 
-  var messageReceiver = MessageReceiver.create(window, silverBulletOrigin, receivedMessage, {deserialize: deserializer.deserialize});
+  var messageReceiver = MessageReceiver.create(window, origin, receivedMessage, {deserialize: deserializer.deserialize});
 
   this.on = function(type, callback) {
     eventEmitter.on(type, callback);
@@ -8392,22 +8402,26 @@ var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigi
   this.stopListening = messageReceiver.stopListening;
 };
 
+SilverBulletMessageReceiver.create = function(window, origin) {
+  return new SilverBulletMessageReceiver(window, origin);
+};
+
 module.exports = SilverBulletMessageReceiver;
 
 },{"./event_emitter":17,"./message_receiver":22,"./silver_bullet/deserializer":24,"eventlistener":13}],33:[function(_dereq_,module,exports){
 var _ = _dereq_('lodash');
 
-var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessageSender) {
+var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessagePoster) {
   var callbacks = {};
   var resolves = {};
 
   silverBulletMessageReceiver.on('publish', function(silverBulletMessage) {
     // TODO: Ensure we don't resolve/return or reject/throw more than once per topic
     resolve = function(data) {
-      silverBulletMessageSender.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
+      silverBulletMessagePoster.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     var reject = function(data) {
-      silverBulletMessageSender.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
+      silverBulletMessagePoster.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     try {
       _.each(callbacks[silverBulletMessage.topic], function(callback) {

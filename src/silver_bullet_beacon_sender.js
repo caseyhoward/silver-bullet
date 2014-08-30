@@ -1,9 +1,9 @@
-var SilverBulletBeaconSender = function(silverBulletMessageSender, silverBulletReadinessChecker, setTimeout) {
+var SilverBulletBeaconSender = function(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout) {
   this.start = function() {
     var silverBulletReady = false;
     var sendBeaconsUntilReady = function() {
       if (!silverBulletReady) {
-        silverBulletMessageSender.sendBeacon();
+        silverBulletMessagePoster.sendBeacon();
         setTimeout(sendBeaconsUntilReady, 100);
       }
     };

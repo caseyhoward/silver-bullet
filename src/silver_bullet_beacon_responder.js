@@ -1,13 +1,13 @@
-var SilverBulletBeaconResponder = function(silverBulletMessageReceiver, silverBulletMessageSender) {
+var SilverBulletBeaconResponder = function(silverBulletMessageReceiver, silverBulletMessagePoster) {
   var beaconReceived = function() {
     silverBulletMessageReceiver.off('beacon', beaconReceived);
-    silverBulletMessageSender.sendReady();
+    silverBulletMessagePoster.sendReady();
   };
   silverBulletMessageReceiver.on('beacon', beaconReceived);
 };
 
-SilverBulletBeaconResponder.create = function(silverBulletBeaconResponder, SilverBulletMessageSender) {
-  return new SilverBulletBeaconResponder(silverBulletBeaconResponder, SilverBulletMessageSender);
+SilverBulletBeaconResponder.create = function(silverBulletBeaconResponder, silverBulletMessagePoster) {
+  return new SilverBulletBeaconResponder(silverBulletBeaconResponder, silverBulletMessagePoster);
 };
 
 module.exports = SilverBulletBeaconResponder;

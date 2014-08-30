@@ -3,7 +3,7 @@ var deserializer = require('./silver_bullet/deserializer');
 var MessageReceiver = require('./message_receiver');
 var EventEmitter = require('./event_emitter');
 
-var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigin) {
+var SilverBulletMessageReceiver = function(window, origin) {
   var eventEmitter = EventEmitter.create();
   var receivedMessage = function(message) {
     if (message) {
@@ -11,7 +11,7 @@ var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigi
     }
   };
 
-  var messageReceiver = MessageReceiver.create(window, silverBulletOrigin, receivedMessage, {deserialize: deserializer.deserialize});
+  var messageReceiver = MessageReceiver.create(window, origin, receivedMessage, {deserialize: deserializer.deserialize});
 
   this.on = function(type, callback) {
     eventEmitter.on(type, callback);
@@ -23,6 +23,10 @@ var SilverBulletMessageReceiver = function(silverBulletWindow, silverBulletOrigi
 
   this.startListening = messageReceiver.startListening;
   this.stopListening = messageReceiver.stopListening;
+};
+
+SilverBulletMessageReceiver.create = function(window, origin) {
+  return new SilverBulletMessageReceiver(window, origin);
 };
 
 module.exports = SilverBulletMessageReceiver;

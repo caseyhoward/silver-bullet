@@ -2,13 +2,13 @@ var SilverBulletPublishReceiver = require('../src/silver_bullet_publish_receiver
 var EventEmitter = require('../src/event_emitter.js');
 
 describe('SilverBulletPublishReceiver', function() {
-  var sandbox, silverBulletPublishReceiver, silverBulletMessageReceiver, silverBulletMessageSender;
+  var sandbox, silverBulletPublishReceiver, silverBulletMessageReceiver, silverBulletMessagePoster;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     silverBulletMessageReceiver = EventEmitter.create();
-    silverBulletMessageSender = {resolve: sandbox.spy(), reject: sandbox.spy()};
-    silverBulletPublishReceiver = new SilverBulletPublishReceiver(silverBulletMessageReceiver, silverBulletMessageSender);
+    silverBulletMessagePoster = {resolve: sandbox.spy(), reject: sandbox.spy()};
+    silverBulletPublishReceiver = new SilverBulletPublishReceiver(silverBulletMessageReceiver, silverBulletMessagePoster);
   });
 
   afterEach(function() {
@@ -30,7 +30,7 @@ describe('SilverBulletPublishReceiver', function() {
     it('subscribes to publish events and resolves', function(done) {
       silverBulletPublishReceiver.subscribe('test', function (data, resolve) {
         resolve('response');
-        called = silverBulletMessageSender.resolve.calledWith('test', 'response', 'some uuid');
+        called = silverBulletMessagePoster.resolve.calledWith('test', 'response', 'some uuid');
         expect(called).to.equal(true);
         done();
       });
@@ -40,7 +40,7 @@ describe('SilverBulletPublishReceiver', function() {
     it('subscribes to publish events and rejects', function(done) {
       silverBulletPublishReceiver.subscribe('test', function (data, resolve, reject) {
         reject('error!!!');
-        called = silverBulletMessageSender.reject.calledWith('test', 'error!!!', 'some uuid');
+        called = silverBulletMessagePoster.reject.calledWith('test', 'error!!!', 'some uuid');
         expect(called).to.equal(true);
         done();
       });
@@ -52,7 +52,7 @@ describe('SilverBulletPublishReceiver', function() {
         return 'response';
       });
       silverBulletMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
-      called = silverBulletMessageSender.resolve.calledWith('test', 'response', 'some uuid');
+      called = silverBulletMessagePoster.resolve.calledWith('test', 'response', 'some uuid');
       expect(called).to.equal(true);
     });
 
@@ -61,7 +61,7 @@ describe('SilverBulletPublishReceiver', function() {
         throw('error!!!');
       });
       silverBulletMessageReceiver.emit('publish', {topic: 'test', data: {abc: 123}, uuid: 'some uuid'});
-      called = silverBulletMessageSender.reject.calledWith('test', 'error!!!', 'some uuid');
+      called = silverBulletMessagePoster.reject.calledWith('test', 'error!!!', 'some uuid');
       expect(called).to.equal(true);
     });
   });

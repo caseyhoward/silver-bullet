@@ -1,12 +1,13 @@
 var _ = require('lodash');
 
-var PendingMessageQueue = function(silverBulletMessageSender, silverBulletReadinessChecker) {
+var PendingMessageQueue = function(silverBulletMessagePoster, silverBulletReadinessChecker) {
   var pendingMessages = [];
   var silverBulletReady = false;
 
   var sendPendingMessages = function() {
+    // TODO: Send asynchronously. Empty items while iterating.
     _.each(pendingMessages, function(message) {
-      silverBulletMessageSender.publish(message.topic, message.data, message.uuid);
+      silverBulletMessagePoster.publish(message.topic, message.data, message.uuid);
     });
     pendingMessages = undefined;
   };
@@ -15,7 +16,7 @@ var PendingMessageQueue = function(silverBulletMessageSender, silverBulletReadin
 
   this.push = function(topic, data, uuid) {
     if (silverBulletReady) {
-      silverBulletMessageSender.publish(topic, data, uuid);
+      silverBulletMessagePoster.publish(topic, data, uuid);
     } else {
       pendingMessages.push({topic: topic, data: data, uuid: uuid});
     }

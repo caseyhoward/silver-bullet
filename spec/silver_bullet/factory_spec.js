@@ -1,14 +1,20 @@
 var silverBullet = require('../../src/silver_bullet/factory.js');
 var SilverBullet = require('../../src/silver_bullet.js');
 var iframeOpener = require('../../src/iframe_opener');
+var SilverBulletMessagePoster = require('../../src/silver_bullet/message_poster');
+var SilverBulletMessageReceiver = require('../../src/silver_bullet_message_receiver');
 
 describe('Factory', function() {
   var testSilverBullet, iframe, sandbox;
+  var silverBulletMessagePoster, silverBulletMessageReceiver;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     iframe = {contentWindow: 'contentWindow'};
+    silverBulletMessagePoster = 'poster';
+    silverBulletMessageReceiver = 'receiver';
     testSilverBullet = 'testSilverBullet';
+    sandbox.stub(SilverBullet, 'create').withArgs(silverBulletMessagePoster, silverBulletMessageReceiver).returns(testSilverBullet);
   });
 
   afterEach(function() {
@@ -17,7 +23,8 @@ describe('Factory', function() {
 
   describe('#fromParent', function() {
     beforeEach(function() {
-      sandbox.stub(SilverBullet, 'create').withArgs(parent, 'http://origin.host').returns(testSilverBullet);
+      sandbox.stub(SilverBulletMessagePoster, 'create').withArgs(parent, 'http://origin.host').returns(silverBulletMessagePoster);
+      sandbox.stub(SilverBulletMessageReceiver, 'create').withArgs(window, 'http://origin.host').returns(silverBulletMessageReceiver);
     });
 
     it('creates a silverBullet', function() {
@@ -27,7 +34,8 @@ describe('Factory', function() {
 
   describe('#createIframe', function() {
     beforeEach(function() {
-      sandbox.stub(SilverBullet, 'create').withArgs(iframe.contentWindow, 'http://origin.host').returns(testSilverBullet);
+      sandbox.stub(SilverBulletMessagePoster, 'create').withArgs(iframe.contentWindow, 'http://origin.host').returns(silverBulletMessagePoster);
+      sandbox.stub(SilverBulletMessageReceiver, 'create').withArgs(window, 'http://origin.host').returns(silverBulletMessageReceiver);
     });
 
     it('creates a silverBullet', function() {
@@ -38,7 +46,8 @@ describe('Factory', function() {
 
   describe('#fromIframe', function() {
     beforeEach(function() {
-      sandbox.stub(SilverBullet, 'create').withArgs(iframe.contentWindow, 'http://origin.host').returns(testSilverBullet);
+      sandbox.stub(SilverBulletMessagePoster, 'create').withArgs(iframe.contentWindow, 'http://origin.host').returns(silverBulletMessagePoster);
+      sandbox.stub(SilverBulletMessageReceiver, 'create').withArgs(window, 'http://origin.host').returns(silverBulletMessageReceiver);
     });
 
     it('creates a silverBullet', function() {

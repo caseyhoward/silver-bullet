@@ -4,15 +4,19 @@ var deserializer = require('../src/silver_bullet/deserializer.js');
 var EventEmitter = require('../src/event_emitter.js');
 
 describe('SilverBulletMessageReceiver', function() {
-  var sandbox, silverBulletMessageReceiver, silverBulletMessageSender, messageReceiver, receivedMessage;
+  var sandbox, silverBulletMessageReceiver, silverBulletMessagePoster, messageReceiver, receivedMessage;
 
   beforeEach(function() {
     messageReceiver = {startListening: sinon.spy(), stopListening: sinon.spy()};
     sandbox = sinon.sandbox.create();
     // TODO: Find out why the following doesn't work
-    // sandbox.stub(MessageReceiver, 'create').withArgs('some window', 'some origin', sinon.match.func).returns(messageReceiver);
-    sandbox.stub(MessageReceiver, 'create').returns(messageReceiver);
-    silverBulletMessageReceiver = new SilverBulletMessageReceiver('some window', 'some origin');
+    sandbox.stub(MessageReceiver, 'create').withArgs(
+      'some window',
+      'some origin',
+      sinon.match.func,
+      sinon.match({deserialize: deserializer.deserialize})
+    ).returns(messageReceiver);
+    silverBulletMessageReceiver = SilverBulletMessageReceiver.create('some window', 'some origin');
     receivedMessage = MessageReceiver.create.getCall(0).args[2];
   });
 

@@ -1,16 +1,16 @@
 var _ = require('lodash');
 
-var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessageSender) {
+var SilverBulletPublishReceiver = function(silverBulletMessageReceiver, silverBulletMessagePoster) {
   var callbacks = {};
   var resolves = {};
 
   silverBulletMessageReceiver.on('publish', function(silverBulletMessage) {
     // TODO: Ensure we don't resolve/return or reject/throw more than once per topic
     resolve = function(data) {
-      silverBulletMessageSender.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
+      silverBulletMessagePoster.resolve(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     var reject = function(data) {
-      silverBulletMessageSender.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
+      silverBulletMessagePoster.reject(silverBulletMessage.topic, data, silverBulletMessage.uuid);
     };
     try {
       _.each(callbacks[silverBulletMessage.topic], function(callback) {

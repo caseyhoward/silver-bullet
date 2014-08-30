@@ -2,7 +2,7 @@ var SilverBulletBeaconSender = require('../src/silver_bullet_beacon_sender');
 var Promise = require('es6-promise').Promise;
 
 describe('SilverBulletBeaconSender', function() {
-  var silverBulletBeaconSender, silverBulletMessageSender, silverBulletReadinessChecker;
+  var silverBulletBeaconSender, silverBulletMessagePoster, silverBulletReadinessChecker;
   var readinessPromise, readinessResolve, test, sandbox;
 
   beforeEach(function() {
@@ -12,8 +12,8 @@ describe('SilverBulletBeaconSender', function() {
       readinessResolve = resolve;
     });
     silverBulletReadinessChecker = {whenReady: sandbox.stub().returns(readinessPromise)};
-    silverBulletMessageSender = {sendBeacon: sinon.spy()};
-    silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessageSender, silverBulletReadinessChecker, setTimeout);
+    silverBulletMessagePoster = {sendBeacon: sinon.spy()};
+    silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout);
   });
 
   afterEach(function() {
@@ -22,29 +22,29 @@ describe('SilverBulletBeaconSender', function() {
 
   it('sends a beacon', function() {
     silverBulletBeaconSender.start();
-    expect(silverBulletMessageSender.sendBeacon.withArgs().called).to.equal(true);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().called).to.equal(true);
   });
 
   it('sends a beacon every 100ms', function() {
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(0);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(0);
     silverBulletBeaconSender.start();
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(1);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(1);
     sandbox.clock.tick(100);
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(2);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(2);
     sandbox.clock.tick(100);
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(3);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(3);
     sandbox.clock.tick(100);
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(4);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(4);
   });
 
   it('stops sending when silverBullet is ready', function(done) {
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(0);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(0);
     silverBulletBeaconSender.start();
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(1);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(1);
     sandbox.clock.tick(100);
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(2);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(2);
     sandbox.clock.tick(100);
-    expect(silverBulletMessageSender.sendBeacon.withArgs().callCount).to.equal(3);
+    expect(silverBulletMessagePoster.sendBeacon.withArgs().callCount).to.equal(3);
     readinessPromise.then(function() {
       sandbox.clock.tick(1000);
       done();
