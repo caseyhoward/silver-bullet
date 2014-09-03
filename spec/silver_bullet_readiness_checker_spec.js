@@ -8,7 +8,7 @@ describe('SilverBulletReadinessChecker', function() {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     silverBulletMessageReceiver = new EventEmitter();
-    silverBulletReadinessChecker = new SilverBulletReadinessChecker(silverBulletMessageReceiver);
+    silverBulletReadinessChecker = SilverBulletReadinessChecker.create(silverBulletMessageReceiver);
   });
 
   afterEach(function() {

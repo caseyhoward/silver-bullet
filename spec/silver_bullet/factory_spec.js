@@ -3,18 +3,21 @@ var SilverBullet = require('../../src/silver_bullet.js');
 var iframeOpener = require('../../src/iframe_opener');
 var SilverBulletMessagePoster = require('../../src/silver_bullet/message_poster');
 var SilverBulletMessageReceiver = require('../../src/silver_bullet_message_receiver');
+var SilverBulletReadinessChecker = require('../../src/silver_bullet_readiness_checker');
 
 describe('Factory', function() {
   var testSilverBullet, iframe, sandbox;
-  var silverBulletMessagePoster, silverBulletMessageReceiver;
+  var silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     iframe = {contentWindow: 'contentWindow'};
     silverBulletMessagePoster = 'poster';
     silverBulletMessageReceiver = 'receiver';
+    silverBulletReadinessChecker = 'readiness checker';
     testSilverBullet = 'testSilverBullet';
-    sandbox.stub(SilverBullet, 'create').withArgs(silverBulletMessagePoster, silverBulletMessageReceiver).returns(testSilverBullet);
+    sandbox.stub(SilverBulletReadinessChecker, 'create').withArgs(silverBulletMessageReceiver).returns(silverBulletReadinessChecker);
+    sandbox.stub(SilverBullet, 'create').withArgs(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker).returns(testSilverBullet);
   });
 
   afterEach(function() {

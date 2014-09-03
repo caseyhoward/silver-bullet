@@ -8145,12 +8145,10 @@ module.exports = MessageReceiver;
 var SilverBulletMessagePublisher = _dereq_('./silver_bullet_message_publisher');
 var SilverBulletBeaconSender = _dereq_('./silver_bullet_beacon_sender');
 var SilverBulletBeaconResponder = _dereq_('./silver_bullet_beacon_responder');
-var SilverBulletReadinessChecker = _dereq_('./silver_bullet_readiness_checker');
 var SilverBulletPublishReceiver = _dereq_('./silver_bullet_publish_receiver');
 var PendingMessageQueue = _dereq_('./silver_bullet/pending_message_queue');
 
-var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
-  var silverBulletReadinessChecker = new SilverBulletReadinessChecker(silverBulletMessageReceiver);
+var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker) {
   var pendingMessageQueue = new PendingMessageQueue(silverBulletMessagePoster, silverBulletReadinessChecker);
   var silverBulletMessagePublisher = new SilverBulletMessagePublisher(silverBulletMessageReceiver, pendingMessageQueue);
   var silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout);
@@ -8173,13 +8171,13 @@ var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiv
   };
 };
 
-SilverBullet.create = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
-  return new SilverBullet(silverBulletMessagePoster, silverBulletMessageReceiver);
+SilverBullet.create = function(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker) {
+  return new SilverBullet(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker);
 };
 
 module.exports = SilverBullet;
 
-},{"./silver_bullet/pending_message_queue":27,"./silver_bullet_beacon_responder":29,"./silver_bullet_beacon_sender":30,"./silver_bullet_message_publisher":31,"./silver_bullet_publish_receiver":33,"./silver_bullet_readiness_checker":34}],24:[function(_dereq_,module,exports){
+},{"./silver_bullet/pending_message_queue":27,"./silver_bullet_beacon_responder":29,"./silver_bullet_beacon_sender":30,"./silver_bullet_message_publisher":31,"./silver_bullet_publish_receiver":33}],24:[function(_dereq_,module,exports){
 var messageKeys = _dereq_('../message_keys');
 var jsonParser = _dereq_('../json_parser.js');
 
@@ -8201,6 +8199,7 @@ module.exports = new Deserializer();
 var SilverBullet = _dereq_('../silver_bullet');
 var iframeOpener = _dereq_('../iframe_opener');
 var SilverBulletMessagePoster = _dereq_('../silver_bullet/message_poster');
+var SilverBulletReadinessChecker = _dereq_('../silver_bullet_readiness_checker');
 var SilverBulletMessageReceiver = _dereq_('../silver_bullet_message_receiver');
 var liteUrl = _dereq_('lite-url');
 
@@ -8209,10 +8208,12 @@ var Factory = function(iframeOpener) {
 
   var create = function(targetWindow, url) {
     var origin = liteUrl(url).origin;
+    // TODO: Inject MessagePoster into SilverBulletMessagePoster
     var silverBulletMessagePoster = SilverBulletMessagePoster.create(targetWindow, origin);
     // TODO: Refactor. window comes out of nowhere.
     var silverBulletMessageReceiver = SilverBulletMessageReceiver.create(window, origin);
-    return SilverBullet.create(silverBulletMessagePoster, silverBulletMessageReceiver);
+    var silverBulletReadinessChecker = SilverBulletReadinessChecker.create(silverBulletMessageReceiver);
+    return SilverBullet.create(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker);
   }
 
   // TODO: Refactor. parent comes out of nowhere.
@@ -8232,7 +8233,7 @@ var Factory = function(iframeOpener) {
 
 module.exports = new Factory(iframeOpener);
 
-},{"../iframe_opener":18,"../silver_bullet":23,"../silver_bullet/message_poster":26,"../silver_bullet_message_receiver":32,"lite-url":14}],26:[function(_dereq_,module,exports){
+},{"../iframe_opener":18,"../silver_bullet":23,"../silver_bullet/message_poster":26,"../silver_bullet_message_receiver":32,"../silver_bullet_readiness_checker":34,"lite-url":14}],26:[function(_dereq_,module,exports){
 var serializer = _dereq_('./serializer');
 var MessagePoster = _dereq_('./../message_poster');
 
@@ -8455,6 +8456,10 @@ var SilverBulletReadinessChecker = function(silverBulletMessageReceiver) {
   this.whenReady = function() {
     return promise;
   };
+};
+
+SilverBulletReadinessChecker.create = function(silverBulletMessageReceiver) {
+ return new SilverBulletReadinessChecker(silverBulletMessageReceiver);
 };
 
 module.exports = SilverBulletReadinessChecker;

@@ -1,6 +1,7 @@
 var SilverBullet = require('../silver_bullet');
 var iframeOpener = require('../iframe_opener');
 var SilverBulletMessagePoster = require('../silver_bullet/message_poster');
+var SilverBulletReadinessChecker = require('../silver_bullet_readiness_checker');
 var SilverBulletMessageReceiver = require('../silver_bullet_message_receiver');
 var liteUrl = require('lite-url');
 
@@ -9,10 +10,12 @@ var Factory = function(iframeOpener) {
 
   var create = function(targetWindow, url) {
     var origin = liteUrl(url).origin;
+    // TODO: Inject MessagePoster into SilverBulletMessagePoster
     var silverBulletMessagePoster = SilverBulletMessagePoster.create(targetWindow, origin);
     // TODO: Refactor. window comes out of nowhere.
     var silverBulletMessageReceiver = SilverBulletMessageReceiver.create(window, origin);
-    return SilverBullet.create(silverBulletMessagePoster, silverBulletMessageReceiver);
+    var silverBulletReadinessChecker = SilverBulletReadinessChecker.create(silverBulletMessageReceiver);
+    return SilverBullet.create(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker);
   }
 
   // TODO: Refactor. parent comes out of nowhere.

@@ -13,4 +13,8 @@ var SilverBulletReadinessChecker = function(silverBulletMessageReceiver) {
   };
 };
 
+SilverBulletReadinessChecker.create = function(silverBulletMessageReceiver) {
+ return new SilverBulletReadinessChecker(silverBulletMessageReceiver);
+};
+
 module.exports = SilverBulletReadinessChecker;

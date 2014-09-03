@@ -1,12 +1,10 @@
 var SilverBulletMessagePublisher = require('./silver_bullet_message_publisher');
 var SilverBulletBeaconSender = require('./silver_bullet_beacon_sender');
 var SilverBulletBeaconResponder = require('./silver_bullet_beacon_responder');
-var SilverBulletReadinessChecker = require('./silver_bullet_readiness_checker');
 var SilverBulletPublishReceiver = require('./silver_bullet_publish_receiver');
 var PendingMessageQueue = require('./silver_bullet/pending_message_queue');
 
-var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
-  var silverBulletReadinessChecker = new SilverBulletReadinessChecker(silverBulletMessageReceiver);
+var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker) {
   var pendingMessageQueue = new PendingMessageQueue(silverBulletMessagePoster, silverBulletReadinessChecker);
   var silverBulletMessagePublisher = new SilverBulletMessagePublisher(silverBulletMessageReceiver, pendingMessageQueue);
   var silverBulletBeaconSender = new SilverBulletBeaconSender(silverBulletMessagePoster, silverBulletReadinessChecker, setTimeout);
@@ -29,8 +27,8 @@ var SilverBullet = function(silverBulletMessagePoster, silverBulletMessageReceiv
   };
 };
 
-SilverBullet.create = function(silverBulletMessagePoster, silverBulletMessageReceiver) {
-  return new SilverBullet(silverBulletMessagePoster, silverBulletMessageReceiver);
+SilverBullet.create = function(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker) {
+  return new SilverBullet(silverBulletMessagePoster, silverBulletMessageReceiver, silverBulletReadinessChecker);
 };
 
 module.exports = SilverBullet;
