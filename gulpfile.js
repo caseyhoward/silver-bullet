@@ -1,10 +1,10 @@
 'use strict';
 
+var requireDir = require('require-dir');
+requireDir('./src/gulp/tasks', { recurse: true });
+
 var gulp = require('gulp');
-var karma = require('gulp-karma');
 var jshint = require('gulp-jshint');
-var glob = require('glob');
-var source = require('vinyl-source-stream');
 
 gulp.task('lint', function() {
   return gulp.src(['src/*.js', 'spec/*.js'])
@@ -26,4 +26,4 @@ gulp.task('test-server', function() {
   startServer();
 });
 
-gulp.task('default', ['lint']);
+gulp.task('default', ['lint', 'spec']);
