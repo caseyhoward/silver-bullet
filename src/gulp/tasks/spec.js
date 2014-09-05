@@ -7,3 +7,10 @@ gulp.task('spec', ['browserify', 'browserify-test'], function (done) {
     singleRun: true
   }, done);
 });
+
+gulp.task('spec-dev', ['browserify', 'browserify-test'], function (done) {
+  karma.start({
+    configFile: __dirname + '/../../../karma.conf.js',
+    singleRun: false
+  }, done);
+});
