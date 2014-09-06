@@ -38,8 +38,13 @@ gulp.task('browserify', function() {
   return doBrowserify(['./src/silver_bullet/factory.js'], 'silver_bullet.js', {standalone: 'silverBullet'});
 });
 
-gulp.task('browserify-test', function() {
-  return doBrowserify(glob.sync('./spec/**/*_spec.js'), 'test_bundle.js');
+gulp.task('browserify-tests', function() {
+  var integrationFiles = glob.sync('./spec/integration/**/*_spec.js');
+  var files = glob.sync('./spec/**/*_spec.js');
+  return doBrowserify(_.difference(files, integrationFiles), 'test_bundle.js');
 });
 
+gulp.task('browserify-integration-tests', function() {
+  return doBrowserify(glob.sync('./spec/integration/**/*_spec.js'), 'integration_test_bundle.js');
+});
 
