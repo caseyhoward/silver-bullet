@@ -1,5 +1,7 @@
 # Silver Bullet #
 
+[![Build Status](https://travis-ci.org/caseyhoward/silver-bullet.svg?branch=master)](https://travis-ci.org/caseyhoward/silver-bullet)
+
 A modern abstraction for communication using postMessage.
 
 ## Why?
